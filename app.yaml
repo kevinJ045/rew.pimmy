@@ -7,4 +7,6 @@ assets:
   icon: assets/icon.png
   folder: ./assets
 install:
+  exec: 
+    pimmy: entry
   requirements: []
