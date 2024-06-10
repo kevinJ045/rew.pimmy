@@ -1,12 +1,12 @@
 {
   "name": "rew.pimmy",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.0.2",
+  "description": "A better package manager for rew",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["Rew", "Packages", "App", "CLI"],
   "author": "",
   "license": "ISC",
   "dependencies": {

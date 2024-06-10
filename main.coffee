@@ -7,7 +7,6 @@ rune = imp 'rune'
 loading =  require 'loading-cli'
 
 db = rune.db 'main'
-repos = db.collection 'repos'
 packagesCol = db.collection 'packages'
 
 rurl = (url) -> if url.startsWith '//' then "https://#{url}" else url
@@ -74,7 +73,7 @@ installPackage = (names, update) ->
     pkg = getPkg name
     unless pkg
       return
-      
+
     p = spawn process.__execFile, ["install", pkg.url, if update then "-yu" else ""], stdio: 'inherit'
     await new Promise (r) ->
       p.on 'exit', r
