@@ -1,7 +1,7 @@
 #!/usr/bin/env rew
-yargs = require 'yargs/yargs'
-{ hideBin } = require 'yargs/helpers'
-path = require 'node:path'
+yargs = inc "yargs/yargs"
+import { hideBin } from 'yargs/helpers'
+
 conf = imp 'conf'
 rune = imp 'rune'
 loading =  require 'loading-cli'
@@ -9,12 +9,9 @@ loading =  require 'loading-cli'
 db = rune.db 'main'
 packagesCol = db.collection 'packages'
 
-rurl = (url) -> if url.startsWith '//' then "https://#{url}" else url
-
-getcmd = (cmd) -> try 
+getcmd = (cmd) -> try
     json exec("#{process.__execFile} #{cmd} --json", {output: false}).toString().trim()
-  catch error
-    {}
+  catch error then {};
 
 color = (code, text) -> "\x1b[#{code}m#{text}\x1b[0m"
 
@@ -84,25 +81,23 @@ removePackage = (names) ->
     await new Promise (r) ->
       p.on 'exit', r
 
-syncRepos = (ignore = '') -> 
+syncRepos = (ignore = '') ->
   repos = getcmd 'repo get'
   load = loading("Updating Repos").start()
   for repo, url of repos
     if ignore.includes(repo) then continue
     load.text = 'Get repo info ' + repo
     repoInfo = try getcmd "repo view #{repo}" 
-    catch error 
-        {}
+    catch error then {};
     packages = repoInfo.packages
     for name, url of packages
-
       match = url.match /^github:([^\/]+)\/(.+)$/
       unless match
         print color(31, "Invalid URL format:"), color(34, url)
         continue
       [, owner, repoName] = match
 
-      pkgData = { name, repo, url }
+      pkgData = { name, repo, url };
 
       load.text = 'Get package info ' + name
 
@@ -120,15 +115,15 @@ syncRepos = (ignore = '') ->
           if app?.assets?.icon
             filesToFetch.push app.assets.icon
 
-      if packagesCol.find({ name })
-        packagesCol.update({ name }, pkgData)
-      else
-        packagesCol.insert pkgData
+        if packagesCol.find({ name })
+          packagesCol.update({ name }, pkgData)
+        else
+          packagesCol.insert pkgData
   load.stop()
 
 filterOut = (array) -> if args.q then array.filter((i) -> i.match(args.q)) else array
 
-listAllPackages = () -> 
+listAllPackages = () ->
   packages = filterOut packagesCol.list().map((pkg) -> " - #{color(33, pkg.repo)}/#{color(32, pkg.name)}#{if exists pjoin(conf.root, '../', pkg.name) then color(34, '*') else ''}")
   if packages.length > 0
     print color(36, "Available Packages:\n")
@@ -159,7 +154,7 @@ listInstalled = () ->
       if args.q and !folder.includes args.q then continue
       appPath = pjoin(conf.root, '../', folder, 'app')
       if exists appPath
-        installedPackages.push(path.basename path.dirname appPath)
+        installedPackages.push(basename dirname appPath)
 
     if installedPackages.length > 0
       print color(36, "Installed Packages:\n")
@@ -234,8 +229,7 @@ args = yargs(hideBin(['rew', ...process.argv]))
   .alias('h', 'help')
   .argv
 
-
-init = () -> 
+init = () ->
   if args.S
     if args.R
       return syncRepos args.i
@@ -252,7 +246,7 @@ init = () ->
     else if args.L or args.q
       return listAllRepos()
     
-  else 
+  else
     if args.a
       return installPackage [args.a, ...args._]
     else if args.r
@@ -263,7 +257,7 @@ init = () ->
       return listInstalled()  
     else
       return listAllPackages()
-  else 
+  else
     if args.q
       return searchPackages(args.q)
 
