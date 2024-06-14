@@ -9,9 +9,11 @@ loading =  require 'loading-cli'
 db = rune.db 'main'
 packagesCol = db.collection 'packages'
 
-getcmd = (cmd) -> try
+getcmd = (cmd) ->
+  try
     json exec("#{process.__execFile} #{cmd} --json", {output: false}).toString().trim()
-  catch error then {};
+  catch error
+  	 null
 
 color = (code, text) -> "\x1b[#{code}m#{text}\x1b[0m"
 
