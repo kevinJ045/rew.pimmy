@@ -93,11 +93,11 @@ syncRepos = (ignore = '') ->
     catch error then {};
     packages = repoInfo.packages
     for name, url of packages
-      match = url.match /^github:([^\/]+)\/(.+)$/
+      match = url.match /^([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/
       unless match
         print color(31, "Invalid URL format:"), color(34, url)
         continue
-      [, owner, repoName] = match
+      [, owner, repoName, branch, commit] = match
 
       pkgData = { name, repo, url };
 
