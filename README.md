@@ -1,6 +1,6 @@
 # Pimmy
 Pimmy is a simple package manager built on top of rew for rew apps. 
-It focuses more on simplicity and helps by download all repo packages locally instead of searching for them, minimalizing search time.
+It focuses more on simplicity and helps by downloading all repo packages locally instead of searching for them, minimalizing search time.
 
 ## Install
 To install `pimmy`, just run this
