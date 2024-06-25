@@ -9,15 +9,28 @@ loading =  require 'loading-cli'
 db = rune.db 'main'
 packagesCol = db.collection 'packages'
 
-getcmd = (cmd) ->
+
+###*
+ * @param cmd {string}
+*###
+export getcmd = (cmd) ->
   try
     json exec("#{process.__execFile} #{cmd} --json", {output: false}).toString().trim()
   catch error
-  	 null
+    null
 
-color = (code, text) -> "\x1b[#{code}m#{text}\x1b[0m"
 
-findPackage = (name) ->
+###*
+ * @param code {string | number}
+ * @param text {string}
+*###
+export color = (code, text) -> "\x1b[#{code}m#{text}\x1b[0m"
+
+
+###*
+ * @param name {string}
+*###
+export findPackage = (name) ->
   pkg = getPkg name
   unless pkg
     return
@@ -31,7 +44,11 @@ findPackage = (name) ->
 
   if hasReadme then print color('33', '\n\n[README.md]')
 
-searchPackages = (term) ->
+
+###*
+ * @param term {string}
+*###
+export searchPackages = (term) ->
   matches = packagesCol.list().filter (pkg) ->
     pkg.name.includes(term) or
     (pkg['package.json'] and json(pkg['package.json']).keywords?.some (keyword) -> keyword.includes(term))
@@ -42,7 +59,10 @@ searchPackages = (term) ->
   else
     print color(33, "No packages found matching:"), color(34, term)
 
-openReadme = (name) ->
+###*
+ * @param name {string}
+*###
+export openReadme = (name) ->
   pkg = getPkg name
   unless pkg
     return
@@ -58,7 +78,7 @@ openReadme = (name) ->
   exec "less #{fname}"
   rm fname
 
-getPkg = (name) ->
+export getPkg = (name) ->
   repo = if name.match '/' then name.split('/')[0] else null
   if name.match '/' then name = name.split('/')[1]
   pkg = packagesCol.find(if repo then { name, repo } else  { name })
@@ -67,7 +87,11 @@ getPkg = (name) ->
     return
   pkg
 
-installPackage = (names, update) ->
+###*
+ * @param names {string[]}
+ * @param update {boolean}
+*###
+export installPackage = (names, update = false) ->
   for name in names
     pkg = getPkg name
     unless pkg
@@ -77,13 +101,16 @@ installPackage = (names, update) ->
     await new Promise (r) ->
       p.on 'exit', r
 
-removePackage = (names) ->
+###*
+ * @param names {string[]}
+*###
+export removePackage = (names) ->
   for name in names
     p = spawn process.__execFile, ["uninstall", name, "-a"], stdio: 'inherit'
     await new Promise (r) ->
       p.on 'exit', r
 
-syncRepos = (ignore = '') ->
+export syncRepos = (ignore = '') ->
   repos = getcmd 'repo get'
   load = loading("Updating Repos").start()
   for repo, url of repos
@@ -93,11 +120,13 @@ syncRepos = (ignore = '') ->
     catch error then {};
     packages = repoInfo.packages
     for name, url of packages
-      match = url.match /^([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/
+      match = url.match /^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/
       unless match
         print color(31, "Invalid URL format:"), color(34, url)
         continue
       [, owner, repoName, branch, commit] = match
+
+      # print owner, repoName
 
       pkgData = { name, repo, url };
 
@@ -123,9 +152,12 @@ syncRepos = (ignore = '') ->
           packagesCol.insert pkgData
   load.stop()
 
-filterOut = (array) -> if args.q then array.filter((i) -> i.match(args.q)) else array
+###*
+ * @param array {string[]}
+*###
+export filterOut = (array) -> if args.q then array.filter((i) -> i.match(args.q)) else array
 
-listAllPackages = () ->
+export listAllPackages = () ->
   packages = filterOut packagesCol.list().map((pkg) -> " - #{color(33, pkg.repo)}/#{color(32, pkg.name)}#{if exists pjoin(conf.root, '../', pkg.name) then color(34, '*') else ''}")
   if packages.length > 0
     print color(36, "Available Packages:\n")
@@ -133,7 +165,7 @@ listAllPackages = () ->
   else
     print color(33, "No packages found")
 
-listAllRepos = () ->
+export listAllRepos = () ->
   repos = getcmd 'repo get'
   repoEntries = filterOut Object.entries(repos).map((i) -> "#{color(33, i[0])}: #{color(32, i[1])}")
   if repoEntries.length > 0
@@ -142,11 +174,18 @@ listAllRepos = () ->
   else
     print color(33, "No repositories found")
 
+###*
+ * @param repo {string}
+ * @param url {string}
+*###
 addRepo = (repo, url) ->
   getcmd 'repo add ' + repo + ' ' + url
 
+###*
+ * @param repo {string}
+*###
 removeRepo = (repo) ->
-  getcmd 'repo delete ' + repo 
+  getcmd 'repo delete ' + repo
 
 listInstalled = () ->
   folders = ls pjoin(conf.root, '../')
