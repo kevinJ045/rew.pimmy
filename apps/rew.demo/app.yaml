@@ -1,0 +1,24 @@
+manifest:
+  package: rew.demo
+entries:
+  main: main.coffee
+crates:
+  - name: demo_crate
+    path: ./demo_crate
+    build: true
+    files:
+      - input: ./demo_crate/target/release/libdemo_crate.so
+        output: .artifacts/libdemo_crate.so
+    cleanup: ./demo_crate/target
+cakes:
+  - ./_build.cake
+build:
+  - input: ./main.coffee
+    output: main.brew
+    using: brew
+    cleanup: ./main.coffee
+  - input: ./main.brew
+    output: ./main.qrew
+    cleanup: ./main.brew
+    using: qrew
+

@@ -1,0 +1,72 @@
+package pimmy::cli;
+
+using namespace rew::ns
+OPTIONS = []
+
+pimmy::cli::option = (...args) -> Usage::create ->
+  OPTIONS.push(args)
+
+pimmy::cli::parse = (args) -> Usage::create (ctx) ->
+  parser = pimmy::cli::parser::new();
+  for option of OPTIONS
+    parser.option ...option
+  ctx.cli_options = parser.parse args
+
+pimmy::cli::parser = class CliParser
+  options: any
+  aliases: any
+  parsed: any
+  constructor()
+    @options = {}
+    @aliases = {}
+    @parsed = {}
+    @
+
+  new()
+    new CliParser()
+
+  option(name, config: any = {})
+    @options[name] = config
+    if config.alias?
+      @aliases[config.alias] = name
+    this
+
+  parse(args: any)
+    i = 0
+    while i < args.length
+      arg = args[i]
+
+      if arg.startsWith('--')
+        key = arg[2..]
+        name = @aliases[key] or key
+        config = @options[name] or {}
+        if config.type is 'boolean'
+          @parsed[name] = true
+        else
+          val = args[i+1]
+          if not val? or val.startsWith('-')
+            @parsed[name] = true
+          else
+            @parsed[name] = val
+            i += 1
+      else if arg.startsWith('-')
+        shortFlags = arg[1..]
+        for ch of shortFlags
+          name = @aliases[ch] or ch
+          config = @options[name] or {}
+          if config.type is 'boolean'
+            @parsed[name] = true
+          else
+            val = args[i+1]
+            if not val? or val.startsWith('-')
+              @parsed[name] = true
+            else
+              @parsed[name] = val
+              i += 1
+      else
+        if not @parsed._?
+          @parsed._ = []
+        @parsed._.push arg
+      i += 1
+
+    @parsed

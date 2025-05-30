@@ -1,0 +1,14 @@
+manifest:
+  package: test.app
+  private: false
+entries:
+  main: main.coffee
+  test: test.coffee
+pimmy.install:
+  caches:
+    - file: /nomad.qrew
+      url: https://objects.github.com/somewhere
+      sha: SHA-SOMETHING-SOMETHING
+    - file: /requirement.so
+      url: https://objects.github.com/somewhere
+      sha: SHA-SOMETHING-SOMETHING

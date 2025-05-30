@@ -1,0 +1,7 @@
+.direnv/
+**/.direnv/
+**/target/
+**/**.qrew
+**/**.brew
+.artifacts/
+**/.artifacts/

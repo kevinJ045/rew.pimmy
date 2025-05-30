@@ -1,0 +1,8 @@
+[package]
+name = "rew-qrew"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.43.0" }
+anyhow = "1.0.96"

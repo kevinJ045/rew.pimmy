@@ -1,0 +1,16 @@
+manifest:
+  package: rew.pimmy
+entries:
+  main: main.coffee
+crates:
+  - name: rew_qrew_stub
+    path: ./rew-qrew-stub
+    build: true
+  - name: rew_qrew
+    path: ./rew-qrew
+    build: true
+    files:
+      - input: ./rew-qrew/target/release/rew-qrew
+        output: .artifacts/rew-qrew
+        cleanup: ./rew-qrew/target
+    cleanup: ./rew-qrew-stub/target
