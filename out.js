@@ -51,10 +51,12 @@ module.exports.main =  async function main() {
   else if (cli_options.sync) {
     if (cli_options.repo) {
       return pimmy.prototype.repo.prototype.sync_all(cli_options.repo)
+    }
+    else if (cli_options.app) {
+      return pimmy.prototype.repo.prototype.lookup(cli_options.app)
     };return
   };return
 }
-
 
 
 
@@ -1379,7 +1381,7 @@ pimmy.prototype.logger.prototype.info = (...logs) => {
   return rew.prototype.io.prototype.out.print('[LOG] ' + logs.join(' '))
 }
 
-pimmy.prototype.logger.prototype.wan = (...logs) => {
+pimmy.prototype.logger.prototype.warn = (...logs) => {
   return rew.prototype.io.prototype.out.print('%c[WARN] ' + logs.join(' '), 'color: yellow;font-weight:bold')
 } 
 
@@ -1605,65 +1607,123 @@ return globalThis.module.exports;
 with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::repo");
 
+
 rew.prototype.mod.prototype.find(module, "#std.net");
 
 // c = rew::channel::new ->
 
-async function _resolveGithub(name, github_url) {
-  let match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
+async function _fetchFile(url) {
+  return await rew.prototype.net.prototype.fetch(url)
+        .then($ => $.text())
+        .catch(function() { return null })
+}
+
+repo.prototype.lookup = function(pkgname) {
+  var results, index, parts, repo_name, real_name, path, data;
+  results = []
+  index = 0 
+
+  // Parse names like "@repo/package"
+  if (pkgname.startsWith("@")) {
+    parts = pkgname.slice(1).split('/')
+    if (parts.length != 2) {
+      pimmy.prototype.logger.prototype.error(`Invalid qualified package: ${pkgname}`)
+      return null
+    };
+
+    [repo_name, real_name] = parts
+  }
+  else {
+    repo_name = null
+    real_name = pkgname
+  }
+
+  while (true) {
+    path = `cache/repo-cache/db_${index}.bin`
+    try {
+      data = JSON.parse(rew.prototype.encoding.prototype.bytesToString(rew.prototype.conf.prototype.readAuto(path)))
+    }
+    catch {
+      break
+    }
+
+    for (const pkg of data) {
+      if (repo_name && pkg.repo == repo_name && pkg.name == real_name) {
+        return pkg
+      }
+      if (!repo_name && pkg.name == real_name) {
+        results.push(pkg)
+      }
+    }
+
+    index += 1
+  }
+
+  if (results.length > 0) {
+    return results[0]
+  }  
+  else {
+    pimmy.prototype.logger.prototype.warn(`Package not found: ${pkgname}`)
+    return null
+  }
+}
+
+
+function _resolveGithubURL(github_url) {
+  var match, owner, repoName, branch, commit, baseUrl;
+  match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
   if (!match) {
     pimmy.prototype.logger.prototype.error(`Invalid GitHub URL: ${github_url}`)
     return null
-  }
-
-  let owner, repoName, branch, commit;
+  };
 
   [, owner, repoName, branch, commit] = match
   branch = branch ?? "main"
 
-  let baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
+  baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
+  return ({baseUrl, owner, repoName, branch, commit})
+}
 
-  let pkg = {
+
+async function _resolveGithub(name, github_url) {
+  var baseUrl, pkg, files, app_content, app, icon_path, readme;
+  ({ baseUrl } = _resolveGithubURL(github_url))
+
+  pkg = {
     name: name,
-    github: github_url,
-    url: baseUrl,
-    branch,
-    commit: commit ?? null
+    url: github_url, 
   }
 
-  let files = ['app.yaml', 'README.md']
+  files = ['app.yaml']
 
-  for (const file of files) {
-    let content = await rew.prototype.net.prototype.fetch(baseUrl + file)
-                .then($ => $.text())
-                .catch(function() { return null })
-    if (content) {
-      pkg[file] = content
-
-      if (file == 'app.yaml') {
-        let app = rew.prototype.yaml.prototype.parse(content)
-        if (app?.assets?.icon) {
-          let icon_path = app.assets.icon
-          let icon_content = await rew.prototype.net.prototype.fetch(baseUrl + icon_path)
-                           .then($1 => $1.text())
-                           .catch(function() { return null })
-          if (icon_content) {
-            pkg[icon_path] = icon_content
-          }
-        }
-      }
-    }
+  app_content = await _fetchFile(baseUrl + "app.yaml")
+  
+  app = rew.prototype.yaml.prototype.parse(app_content)
+  if (app?.assets?.icon) {
+    icon_path = app.assets.icon
+    pkg.icon = baseUrl + icon_path
+  }
+  if (app?.manifest?.readme) {
+    readme = await _fetchFile(baseUrl + app?.manifest?.readme)
+    pkg.readme = readme
+  }
+  if (app?.manifest?.tags) {
+    pkg.tags = app?.manifest?.tags ?? []
+  }
+  if (app?.manifest?.description) {
+    pkg.description = app.manifest.description
   }
 
   return pkg
 }
 
 async function _parseRepo(name, repo_url, seen = {}, result = []) {
+  var data, repo, pkg;
   if (seen[repo_url]) return
   seen[repo_url] = true
 
-  let data = await rew.prototype.net.prototype.fetch("https:" + repo_url)
-           .then($2 => $2.text())
+  data = await rew.prototype.net.prototype.fetch("https:" + repo_url)
+           .then($1 => $1.text())
            .catch(function() { return null })
 
   if (!data) {
@@ -1671,7 +1731,7 @@ async function _parseRepo(name, repo_url, seen = {}, result = []) {
     return
   }
 
-  let repo = rew.prototype.yaml.prototype.parse(data)
+  repo = rew.prototype.yaml.prototype.parse(data)
 
   // Recursively import other YAMLs
   for (const imported of repo.imports ?? []) {
@@ -1681,10 +1741,11 @@ async function _parseRepo(name, repo_url, seen = {}, result = []) {
   // Resolve packages
   let ref;for (const pkgname in ref = repo.packages) {const value = ref[pkgname];
     if (typeof value == 'string' && value.startsWith("github:")) {
-      let pkg = await _resolveGithub(pkgname, value)
+      pkg = await _resolveGithub(pkgname, value)
       if (pkg) result.push(pkg)
     }
     else {
+      if (value.readme) value.readme = await _fetchFile(value.readme)
       result.push({ name: pkgname, ...value })
     }
   }
@@ -1692,16 +1753,18 @@ async function _parseRepo(name, repo_url, seen = {}, result = []) {
   return result
 }
 
-repo.prototype.sync_all = async function() {
-  let repos = conf.prototype.readYAML("repo/main.yaml")
+repo.prototype.sync_all = async function(repo_name) {
+  var repos, index, data, path;
+  repos = conf.prototype.readYAML("repo/main.yaml")
 
-  let index = 0
+  index = 0
   
   pimmy.prototype.loader.prototype.start("Downloading")
   for (const name in repos) {const url = repos[name];
-    let data = await _parseRepo(name, url)
+    if (typeof repo_name == "string" && name !== repo_name) continue; 
+    data = await _parseRepo(name, url)
     if (data) {
-      let path = `cache/repo-cache/db_${index}.bin`
+      path = `cache/repo-cache/db_${index}.bin`
       rew.prototype.conf.prototype.writeAuto(path, data)
       index += 1
     }
@@ -1710,8 +1773,9 @@ repo.prototype.sync_all = async function() {
 }
 
 pub(repo.prototype._check_init = function() {
+  var config;
   try {
-    let config = rew.prototype.conf.prototype.readAuto("init.yaml")
+    config = rew.prototype.conf.prototype.readAuto("init.yaml")
     return config
   }
   catch {
@@ -1720,9 +1784,10 @@ pub(repo.prototype._check_init = function() {
 })
 
 repo.prototype.init = function() {
-  let init_file = repo.prototype._check_init()
+  var init_file, pimmy_data_path;
+  init_file = repo.prototype._check_init()
   if (init_file?._repo) return
-  let pimmy_data_path = conf.prototype.path()
+  pimmy_data_path = conf.prototype.path()
   mkdir(path.prototype.join(pimmy_data_path, 'cache'))
   mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))
   mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))

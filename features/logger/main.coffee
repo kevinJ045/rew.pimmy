@@ -22,5 +22,5 @@ pimmy::logger::error = (...logs) =>
 pimmy::logger::info = (...logs) =>
   rew::io::out.print '[LOG] ' + logs.join(' ')
 
-pimmy::logger::wan = (...logs) =>
+pimmy::logger::warn = (...logs) =>
   rew::io::out.print '%c[WARN] ' + logs.join(' '), 'color: yellow;font-weight:bold' 

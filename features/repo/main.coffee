@@ -1,10 +1,54 @@
 package pimmy::repo;
-
+using compiler::autoLet.disable
+using compiler::autoVar
 import "#std.net";
 
 # c = rew::channel::new ->
 
-function _resolveGithub(name, github_url)
+function _fetchFile(url)
+  await rew::net::fetch url
+        .then .text()
+        .catch -> null
+
+function repo::lookup(pkgname)
+  results = []
+  index = 0 
+
+  # Parse names like "@repo/package"
+  if pkgname.startsWith "@"
+    parts = pkgname.slice(1).split('/')
+    if parts.length != 2
+      pimmy::logger::error "Invalid qualified package: #{pkgname}"
+      return null
+
+    [repo_name, real_name] = parts
+  else
+    repo_name = null
+    real_name = pkgname
+
+  while true
+    path = "cache/repo-cache/db_#{index}.bin"
+    try
+      data = JSON.parse rew::encoding::bytesToString rew::conf::readAuto path
+    catch
+      break
+
+    for pkg of data
+      if repo_name and pkg.repo == repo_name and pkg.name == real_name
+        return pkg
+      if not repo_name and pkg.name == real_name
+        results.push pkg
+
+    index += 1
+
+  if results.length > 0
+    return results[0]  
+  else
+    pimmy::logger::warn "Package not found: #{pkgname}"
+    return null
+
+
+function _resolveGithubURL(github_url)
   match = github_url.match /^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/
   unless match
     pimmy::logger::error "Invalid GitHub URL: #{github_url}"
@@ -14,33 +58,32 @@ function _resolveGithub(name, github_url)
   branch = branch ?? "main"
 
   baseUrl = "https://raw.githubusercontent.com/#{owner}/#{repoName}/#{branch}/"
+  {baseUrl, owner, repoName, branch, commit}
+
+
+function _resolveGithub(name, github_url)
+  { baseUrl } = _resolveGithubURL github_url
 
   pkg = {
     name: name,
-    github: github_url,
-    url: baseUrl,
-    branch,
-    commit: commit ?? null
+    url: github_url, 
   }
 
-  files = ['app.yaml', 'README.md']
+  files = ['app.yaml']
 
-  for file of files
-    content = await rew::net::fetch baseUrl + file
-                .then .text()
-                .catch -> null
-    if content
-      pkg[file] = content
-
-      if file == 'app.yaml'
-        app = rew::yaml::parse content
-        if app?.assets?.icon
-          icon_path = app.assets.icon
-          icon_content = await rew::net::fetch baseUrl + icon_path
-                           .then .text()
-                           .catch -> null
-          if icon_content
-            pkg[icon_path] = icon_content
+  app_content = await _fetchFile baseUrl + "app.yaml"
+  
+  app = rew::yaml::parse app_content
+  if app?.assets?.icon
+    icon_path = app.assets.icon
+    pkg.icon = baseUrl + icon_path
+  if app?.manifest?.readme
+    readme = await _fetchFile baseUrl + app?.manifest?.readme
+    pkg.readme = readme
+  if app?.manifest?.tags
+    pkg.tags = app?.manifest?.tags ?? []
+  if app?.manifest?.description
+    pkg.description = app.manifest.description
 
   return pkg
 
@@ -68,17 +111,19 @@ function _parseRepo(name, repo_url, seen = {}, result = [])
       pkg = await _resolveGithub pkgname, value
       if pkg then result.push pkg
     else
+      if value.readme then value.readme = await _fetchFile value.readme
       result.push { name: pkgname, ...value }
 
   return result
 
-function repo::sync_all()
+function repo::sync_all(repo_name)
   repos = conf::readYAML "repo/main.yaml"
 
   index = 0
   
   pimmy::loader::start "Downloading"
   for name, url in repos
+    if typeof repo_name == "string" and name !== repo_name then continue; 
     data = await _parseRepo name, url
     if data
       path = "cache/repo-cache/db_#{index}.bin"

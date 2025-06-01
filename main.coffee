@@ -44,7 +44,8 @@ export function main()
   else if cli_options.sync
     if cli_options.repo
       pimmy::repo::sync_all cli_options.repo
-
+    else if cli_options.app
+      pimmy::repo::lookup cli_options.app
 
 
 
