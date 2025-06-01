@@ -31,3 +31,4 @@ pimmy::init::start = ->
   pimmy::logger::title '', '', 'Init Start'
   pimmy::init::_copy_apps()
   pimmy::init::_set_init()
+  pimmy::repo::init()

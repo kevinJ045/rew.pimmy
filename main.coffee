@@ -1,13 +1,16 @@
 package pimmy;
 import "#std!";
 import "#std.yaml";
-using pub namespace rew::ns;
+using public namespace rew::ns;
 
 import "./features/loader/main.coffee";
 import "./features/logger/main.coffee";
 import "./features/utils/main.coffee";
 import "./features/init/main.coffee";
 import "./features/builder/main.coffee";
+import "./features/cache/main.coffee";
+import "./features/repo/main.coffee";
+import "./features/git/main.coffee";
 import "./features/cli/main.coffee";
 
 # type
@@ -15,6 +18,7 @@ using pimmy::cli::option 'app', type: 'string', alias: 'A'
 using pimmy::cli::option 'repo', type: 'string', alias: 'R'
 # action
 using pimmy::cli::option 'sync', type: 'boolean', alias: 'S'
+using pimmy::cli::option 'cache', type: 'boolean', alias: 'c'
 using pimmy::cli::option 'remove', type: 'boolean', alias: 'r'
 using pimmy::cli::option 'add', type: 'boolean', alias: 'a'
 using pimmy::cli::option 'build', type: 'boolean', alias: 'b'
@@ -27,11 +31,19 @@ using pimmy::cli::parse rew::process::args;
 
 pimmy::logger::LOG = cli_options.verbose;
 pimmy::init::start();
+pimmy::repo::init();
 
-
-if cli_options.build and typeof cli_options.app == 'string'
-  pimmy::builder::build cli_options.app, cli_options.safe
-    
+export function main()
+  if cli_options.build and typeof cli_options.app == 'string'
+    pimmy::builder::build await pimmy::cache::resolve(cli_options.app), cli_options.safe
+  else if cli_options.cache
+    if typeof cli_options.app == 'string'
+      pimmy::cache::resolve cli_options.app
+    else if cli_options.repo 
+      pimmy::repo::sync_all cli_options.repo
+  else if cli_options.sync
+    if cli_options.repo
+      pimmy::repo::sync_all cli_options.repo
 
 
 

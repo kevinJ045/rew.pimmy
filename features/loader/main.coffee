@@ -1,6 +1,6 @@
 package pimmy::loader;
 
-loader::frames = ['|', '/', '-', '\\\\']
+loader::frames = ['|', '/', '-', '\\']
 loader::interval = null
 loader::i = 0
 loader::text = 'Loading'
@@ -11,7 +11,7 @@ loader::start = (text) ->
 
   @interval = setInterval =>
     frame = loader::frames[loader::i % loader::frames.length]
-    printf "\\r#{frame} #{loader::text}"
+    printf "\r#{frame} #{loader::text}"
     loader::i++
   , 100
 
