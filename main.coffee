@@ -16,6 +16,7 @@ import "./features/cli/main.coffee";
 # type
 using pimmy::cli::option 'app', type: 'string', alias: 'A'
 using pimmy::cli::option 'repo', type: 'string', alias: 'R'
+using pimmy::cli::option 'cached', type: 'string', alias: 'C'
 # action
 using pimmy::cli::option 'sync', type: 'boolean', alias: 'S'
 using pimmy::cli::option 'cache', type: 'boolean', alias: 'c'
@@ -34,18 +35,28 @@ pimmy::init::start();
 pimmy::repo::init();
 
 export function main()
+  
+  # when building, do not resolve the app elsewhere unless cache is enabled
   if cli_options.build and typeof cli_options.app == 'string'
-    pimmy::builder::build await pimmy::cache::resolve(cli_options.app), cli_options.safe
-  else if cli_options.cache
-    if typeof cli_options.app == 'string'
-      pimmy::cache::resolve cli_options.app
-    else if cli_options.repo 
-      pimmy::repo::sync_all cli_options.repo
-  else if cli_options.sync
+    if cli_options.cache
+      cli_options.app = await pimmy::cache::resolve cli_options.app
+    pimmy::builder::build cli_options.app, cli_options.safe
+    return
+
+  if typeof cli_options.app == 'string'
+    cli_options.app = await pimmy::cache::resolve cli_options.app
+    if !cli_options.app then return
+
+  if cli_options.sync
     if cli_options.repo
       pimmy::repo::sync_all cli_options.repo
     else if cli_options.app
-      pimmy::repo::lookup cli_options.app
+      pimmy::cache::install cli_options.app, true
+  else if cli_options.add
+    if cli_options.repo
+      pimmy::repo::sync_all cli_options.repo
+    else if cli_options.app
+      pimmy::cache::install cli_options.app
 
 
 

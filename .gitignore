@@ -5,3 +5,4 @@
 **/**.brew
 .artifacts/
 **/.artifacts/
+**/**.zip

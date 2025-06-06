@@ -48,21 +48,9 @@ function repo::lookup(pkgname)
     return null
 
 
-function _resolveGithubURL(github_url)
-  match = github_url.match /^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/
-  unless match
-    pimmy::logger::error "Invalid GitHub URL: #{github_url}"
-    return null
-
-  [, owner, repoName, branch, commit] = match
-  branch = branch ?? "main"
-
-  baseUrl = "https://raw.githubusercontent.com/#{owner}/#{repoName}/#{branch}/"
-  {baseUrl, owner, repoName, branch, commit}
-
 
 function _resolveGithub(name, github_url)
-  { baseUrl } = _resolveGithubURL github_url
+  { baseUrl } = pimmy::utils::resolveGithubURL github_url
 
   pkg = {
     name: name,
@@ -109,10 +97,11 @@ function _parseRepo(name, repo_url, seen = {}, result = [])
   for pkgname, value in repo.packages
     if typeof value == 'string' and value.startsWith "github:"
       pkg = await _resolveGithub pkgname, value
+      if pkg then pkg.repo = name
       if pkg then result.push pkg
     else
       if value.readme then value.readme = await _fetchFile value.readme
-      result.push { name: pkgname, ...value }
+      result.push { name: pkgname, repo: name, ...value }
 
   return result
 
@@ -143,7 +132,7 @@ function repo::init()
   if init_file?._repo then return
   pimmy_data_path = conf::path()
   mkdir path::join pimmy_data_path, 'cache'
-  mkdir path::join pimmy_data_path, 'cache/repo-cache'
+  mkdir path::join pimmy_data_path, 'cache/app-cache'
   mkdir path::join pimmy_data_path, 'cache/repo-cache'
   mkdir path::join pimmy_data_path, 'repo'
 

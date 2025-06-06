@@ -6,14 +6,16 @@ crates:
   - name: demo_crate
     path: ./demo_crate
     build: true
+    trigger: 101
     files:
       - input: ./demo_crate/target/release/libdemo_crate.so
         output: .artifacts/libdemo_crate.so
-    cleanup: ./demo_crate/target
+    cleanup: ./demo_crate
 cakes:
   - ./_build.cake
 build:
   - input: ./main.coffee
+    id: 101
     output: main.brew
     using: brew
     cleanup: ./main.coffee
@@ -21,4 +23,11 @@ build:
     output: ./main.qrew
     cleanup: ./main.brew
     using: qrew
-
+  - input: ./main.qrew
+    output: main.qrew
+    using: demo_builder
+install:
+  build: true
+  cleanup:
+    - entry.zip
+    - .git

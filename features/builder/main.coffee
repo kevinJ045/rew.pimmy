@@ -4,7 +4,7 @@ import "./brew.coffee";
 using namespace pimmy::builder::cargo;
 
 pimmy::builder::build = (app_path_relative, safe_mode) ->
-  app_path = rew::path::normalize rew::path::join rew::process::cwd, app_path_relative
+  app_path = if path::isAbsolute app_path_relative then app_path_relative else rew::path::normalize rew::path::join rew::process::cwd, app_path_relative
   app_conf_path = rew::path::join app_path, 'app.yaml'
 
   unless rew::fs::exists app_conf_path then throw new Error('App not found');
@@ -21,8 +21,10 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
         for key in cake.builders
           pimmy::builder::[key] = cake.builders[key]
 
+  triggers = [];
+
   if config.crates
-    cargo::build_crates_for app_path, config, safe_mode 
+    cargo::build_crates_for app_path, config, safe_mode, triggers
   
   if config.build
     for file of config.build
@@ -33,6 +35,8 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
         output_path = rew::path::normalize rew::path::join app_path, file.output
         unless exists input_path then throw new Error("Input file #{input_path} not found")
         await build_fn(app_path, config, file, input_path, output_path)
+      if file.id then triggers.filter .id == file.id
+        .forEach .build()
       if file.cleanup and !safe_mode
         rm path::join(app_path, file.cleanup), true
         pimmy::logger::action 'green', '-', 'File Cleanup'

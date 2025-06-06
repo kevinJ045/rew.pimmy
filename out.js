@@ -19,6 +19,7 @@ rew.prototype.mod.prototype.find(module, "./features/cli/main.coffee");
 // type
 using(pimmy.prototype.cli.prototype.option('app', {type: 'string', alias: 'A'}))
 using(pimmy.prototype.cli.prototype.option('repo', {type: 'string', alias: 'R'}))
+using(pimmy.prototype.cli.prototype.option('cached', {type: 'string', alias: 'C'}))
 // action
 using(pimmy.prototype.cli.prototype.option('sync', {type: 'boolean', alias: 'S'}))
 using(pimmy.prototype.cli.prototype.option('cache', {type: 'boolean', alias: 'c'}))
@@ -37,23 +38,35 @@ pimmy.prototype.init.prototype.start();
 pimmy.prototype.repo.prototype.init();
 
 module.exports.main =  async function main() {
+  
+  // when building, do not resolve the app elsewhere unless cache is enabled
   if (cli_options.build && typeof cli_options.app == 'string') {
-    return pimmy.prototype.builder.prototype.build(await pimmy.prototype.cache.prototype.resolve(cli_options.app), cli_options.safe)
-  }
-  else if (cli_options.cache) {
-    if (typeof cli_options.app == 'string') {
-      return pimmy.prototype.cache.prototype.resolve(cli_options.app)
+    if (cli_options.cache) {
+      cli_options.app = await pimmy.prototype.cache.prototype.resolve(cli_options.app)
     }
-    else if (cli_options.repo) { 
-      return pimmy.prototype.repo.prototype.sync_all(cli_options.repo)
-    };return
+    pimmy.prototype.builder.prototype.build(cli_options.app, cli_options.safe)
+    return
   }
-  else if (cli_options.sync) {
+
+  if (typeof cli_options.app == 'string') {
+    cli_options.app = await pimmy.prototype.cache.prototype.resolve(cli_options.app)
+    if (!cli_options.app) return
+  }
+
+  if (cli_options.sync) {
     if (cli_options.repo) {
       return pimmy.prototype.repo.prototype.sync_all(cli_options.repo)
     }
     else if (cli_options.app) {
-      return pimmy.prototype.repo.prototype.lookup(cli_options.app)
+      return pimmy.prototype.cache.prototype.install(cli_options.app, true)
+    };return
+  }
+  else if (cli_options.add) {
+    if (cli_options.repo) {
+      return pimmy.prototype.repo.prototype.sync_all(cli_options.repo)
+    }
+    else if (cli_options.app) {
+      return pimmy.prototype.cache.prototype.install(cli_options.app)
     };return
   };return
 }
@@ -351,6 +364,7 @@ class Type{
 			this[i] = o[i];
 		}
 	}
+
 }
 
 function typedef(value, strict = false) {
@@ -369,6 +383,9 @@ function typedef(value, strict = false) {
 		type: getType(value),
 		isConstructed: typeof value === 'object' && value !== null && !Array.isArray(value),
 		isEmpty: typeof value == 'object' ? !Object.keys(value).length : typeof value == 'string' ? value == '' : typeof value !== 'function',
+		or(...others){
+			return [this, ...others];
+		}
 	});
 }
 
@@ -416,6 +433,11 @@ const typeAre = (values, types) => {
 
 function typeis(obj, typeDef, missingObjects = false) {
 
+	
+	if(Array.isArray(typeDef)){
+		return typeDef.some((item) => typeis(obj, item));
+	}
+
 	if(obj == null && typeDef === null) return true;
 	else if(obj == null) return false;
 	if(obj == undefined && typeDef === undefined) return true;
@@ -423,12 +445,13 @@ function typeis(obj, typeDef, missingObjects = false) {
 
 	if(typeDef == null && obj === null) return true;
 	else if(typeDef == null) return false;
-
 	if(typeDef == undefined && obj === undefined) return true;
 	else if(typeDef == undefined) return false;
 
+
 	// Resolve Type
 	if (typeof typeDef == 'function' && typeDef.type instanceof Type) typeDef = typeDef.type;
+	else if(typeof obj == "object" && typeof typeDef == "function" && obj instanceof typeDef) return true;
 
 	if (typeDef.isConstructed && typeDef.class && !(obj instanceof typeDef.class)) {
 		return missingObjects ? [false] : false;
@@ -493,30 +516,38 @@ function typei(child, parent) {
 	return child instanceof parent || child.constructor === parent;
 }
 
+const _supportsFor = (item) => {
+	item.or = (...others) => [item, ...others]
+}
 function int(str) {
 	return parseInt(str);
 }
 int.type = typedef(1);
+_supportsFor(int);
 
 function float(str) {
 	return parseFloat(str);
 }
 float.type = typedef(1.0);
+_supportsFor(float);
 
 function num(str) {
 	return Number(str);
 }
+_supportsFor(num);
 num.type = typedef(1);
 
 function str(str) {
 	return str ? str.toString() : '';
 }
 str.type = typedef('');
+_supportsFor(str);
 
 function bool(value) {
 	return typeof value == 'string' ? (value == 'true' ? true : false) : value !== null && value !== undefined;
 }
 bool.type = typedef(true);
+_supportsFor(bool);
 
 const SerializableData = ['string', 'number', 'boolean'];
 const isRegExp = (obj) => Object.prototype.toString.call(obj) === '[object RegExp]';
@@ -726,6 +757,56 @@ function struct(template) {
 	return s;
 };
 
+
+function macro(_, _fn){
+  return function(name, ...args){
+    let fn = args.pop()
+    let full_args = args.length == 1 && args[0] == null ? [] : args;
+    return _fn(name, fn, ...full_args);
+	};
+}
+
+function proto(name, ...args){
+	let _strict = false;
+	let fn = args.pop()
+	let full_args = args.length == 1 && args[0] == null ? [] : args;
+	full_args = full_args.filter(i => {
+		if(i == "strict"){
+			_strict = true;
+			return false;
+		} else return true;
+	});
+	let parameter_types = !full_args.length ? [[], undefined] :
+		full_args.length == 1 ? [[], full_args[0]] :
+		[
+			Array.isArray(full_args[0]) ? full_args[0] : [full_args[0]],
+			full_args[1]
+		];
+	return function(...args){
+		const checked_args = args.map((arg, index) => {
+			// rew.prototype.io.prototype.out.print("ARGS", arg, parameter_types[0]);
+			if(typeis(arg, parameter_types[0][index])){
+				return arg;
+			} else if(_strict){
+				throw new TypeError(`Argument for function ${name || '<anonymous>'} at index ${index} is of the wrong type.`);
+			} else if(typeof parameter_types[0][index] == "function"){
+				return parameter_types[0][index](arg);
+			}
+			return arg;
+		});
+		const result = fn.call(this, ...checked_args);
+		if(typeis(result, parameter_types[1])){
+			return result;
+		} else if(_strict){
+			throw new TypeError(`Function ${name || '<anonymous>'} returned the wrong type.`);
+		} else if(typeof parameter_types[1] == "function"){
+			return parameter_types[1](result);
+		}
+		return result;
+	}
+}
+proto.strict = (name, ...a) => proto(name, "strict", ...a);
+
 if(!rew.extensions.has('types')) rew.extensions.add('types', () => rew.extensions.createClass({
 	_namespace(){
 		return this;
@@ -742,7 +823,9 @@ if(!rew.extensions.has('types')) rew.extensions.add('types', () => rew.extension
 	num,
 	str,
 	bool,
-	struct
+	struct,
+	macro,
+	proto
 }));
 })({filename: "#std.types"});(function(module){
 "no-compile"
@@ -854,7 +937,17 @@ if(!rew.extensions.has('conf')) rew.extensions.add('conf', (Deno, module) => rew
 })({filename: "#std.conf"});(function(module){
 "no-compile"
 if(!rew.extensions.has('encoding')) rew.extensions.add('encoding', (Deno, module) => rew.extensions.createClass({
-
+  _namespace(){
+    return {
+      ...this,
+      toBytes: (string) => {
+        return this.stringToBytes(string);
+      },
+      strBytes: (bytes) => {
+        return this.bytesToString(bytes);
+      }
+    };
+  },
   toBase64(data) {
     if (data instanceof Uint8Array) {
       return rew.ops.op_to_base64(Array.from(data));
@@ -927,6 +1020,11 @@ if(!rew.extensions.has('fs')) rew.extensions.add('fs', (Deno, module) => rew.ext
   },
 
   ...Deno.fs,
+
+  open(path, options){
+    const a = path.startsWith('/') ? path : rew.prototype._path.prototype.resolveFrom(module.filename, path);
+    return Deno.fs.open(a, options);
+  },
 
   read(path, options = { binary: false }) {
     const result = rew.ops.op_fs_read(module.filename, path, options);
@@ -1398,6 +1496,24 @@ rew.prototype.mod.prototype.find(module, "#std.yaml");
 pimmy.prototype.utils.prototype.readYaml = function(path) {
   return rew.prototype.yaml.prototype.parse(read(path))
 }
+
+pimmy.prototype.utils.prototype.resolveGithubURL = function(github_url) {
+  let match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
+  if (!match) {
+    pimmy.prototype.logger.prototype.error(`Invalid GitHub URL: ${github_url}`)
+    return null
+  }
+
+  let owner, repoName, branch, commit;
+
+  [, owner, repoName, branch, commit] = match
+  branch = branch ?? "main"
+
+  let baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
+  let homeUrl = `https://github.com/${owner}/${repoName}`
+  return ({baseUrl, homeUrl, owner, repoName, branch, commit})
+}
+
 }
 return globalThis.module.exports;
 }          
@@ -1457,7 +1573,7 @@ rew.prototype.mod.prototype.find(module, "./brew.coffee");
 using(namespace(pimmy.prototype.builder.prototype.cargo));
 
 pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe_mode) {
-  let app_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(rew.prototype.process.prototype.cwd, app_path_relative))
+  let ref;if (path.prototype.isAbsolute(app_path_relative)) ref = app_path_relative; else ref = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(rew.prototype.process.prototype.cwd, app_path_relative));let app_path = ref
   let app_conf_path = rew.prototype.path.prototype.join(app_path, 'app.yaml')
 
   if (!rew.prototype.fs.prototype.exists(app_conf_path)) throw new Error('App not found');
@@ -1478,9 +1594,11 @@ pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe
     }
   }
 
+  let triggers = [];
+
   if (config.crates) {
-    cargo.prototype.build_crates_for(app_path, config, safe_mode)
-  } 
+    cargo.prototype.build_crates_for(app_path, config, safe_mode, triggers)
+  }
   
   if (config.build) {
     const results=[];for (const file of config.build) {
@@ -1492,6 +1610,8 @@ pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe
         if (!exists(input_path)) throw new Error(`Input file ${input_path} not found`)
         await build_fn(app_path, config, file, input_path, output_path)
       }
+      if (file.id) triggers.filter($ => $.id == file.id)
+        .forEach($1 => $1.build())
       if (file.cleanup && !safe_mode) {
         rm(path.prototype.join(app_path, file.cleanup), true)
         results.push(pimmy.prototype.logger.prototype.action('green', '-', 'File Cleanup'))
@@ -1521,37 +1641,46 @@ return globalThis.module.exports;
 with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::builder::cargo");
 
+function build_crate(crate, app_path, safe_mode) {
+  let crate_path = path.prototype.normalize(path.prototype.join(app_path, crate.path))
+  pimmy.prototype.logger.prototype.action('green', '-', 'Building crate', crate.name)
+  let result = shell.prototype.exec("cargo build --release", {cwd: crate_path, stdout: 'piped'})
+  if (!crate.build) return 1;
+  if (!result.success) {
+    pimmy.prototype.loader.prototype.stop()
+    pimmy.prototype.logger.prototype.error('Failed to build cargo')
+    print(rew.prototype.encoding.prototype.bytesToString(result.stderr))
+    pimmy.prototype.logger.prototype.error('Cargo build failed')
+    return 0
+  }
+  printf('\x1b[1A\r')
+  pimmy.prototype.logger.prototype.action('green', 'X', 'Built Crate', crate.name)
+  if (crate.files) {
+    for (const file of crate.files) {
+      copy(path.prototype.join(app_path, file.input), path.prototype.join(app_path, file.output))
+      if (file.cleanup) rm(path.prototype.join(app_path, file.cleanup), true)
+    }
+  }
 
-cargo.prototype.build_crates_for = function(app_path, app_config, safe_mode) {
+  if (crate.cleanup && !safe_mode) {
+    pimmy.prototype.logger.prototype.action('green', '-', 'Clean Up', crate.name)
+    rm(path.prototype.join(app_path, crate.cleanup), true)
+  }
+  return 1
+}
+
+cargo.prototype.build_crates_for = function(app_path, app_config, safe_mode, triggers) {
   pimmy.prototype.logger.prototype.subtitle('', '', "Building app crates for", app_config.manifest.package);
   
-  const results=[];for (const crate of app_config.crates) {
-    let crate_path = path.prototype.normalize(path.prototype.join(app_path, crate.path))
-    pimmy.prototype.logger.prototype.action('green', '-', 'Building crate', crate.name)
-    let result = shell.prototype.exec("cargo build --release", {cwd: crate_path, stdout: 'piped'})
-    if (!crate.build) continue;
-    if (!result.success) {
-      pimmy.prototype.loader.prototype.stop()
-      pimmy.prototype.logger.prototype.error('Failed to build cargo')
-      print(rew.prototype.encoding.prototype.bytesToString(result.stderr))
-      pimmy.prototype.logger.prototype.error('Cargo build failed')
+  for (const crate of app_config.crates) {
+    if (crate.trigger) {
+      triggers.push({ id: crate.trigger, build: () => build_crate(crate, app_path, safe_mode) })
+    }
+    else if (!build_crate(crate, app_path, safe_mode)) {
       return 0
     }
-    printf('\x1b[1A\\r')
-    pimmy.prototype.logger.prototype.action('green', 'X', 'Built Crate', crate.name)
-    if (crate.files) {
-      for (const file of crate.files) {
-        copy(path.prototype.join(app_path, file.input), path.prototype.join(app_path, file.output))
-        if (file.cleanup) rm(path.prototype.join(app_path, file.cleanup), true)
-      }
-    }
-  
-    if (crate.cleanup && !safe_mode) {
-      pimmy.prototype.logger.prototype.action('green', '-', 'Clean Up', crate.name)
-      rm(path.prototype.join(app_path, crate.cleanup), true)
-    }
-    return 1
-  };return results;
+  }
+  return 1
 }
 
 
@@ -1581,17 +1710,203 @@ return globalThis.module.exports;
 with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::cache");
 
-pimmy.prototype.cache.prototype.parse_name = function(key) {
-  return key
+let _cache_path = path.prototype.join(conf.prototype.path(), 'cache/app-cache')
+let _url_pattern = /^file\+([a-zA-Z0-9.]+)(?:\+sha\(([a-fA-F0-9]+)\))?\+(.+)$/;
+
+function renderProgress(downloaded, total) {
+  const percent = total ? downloaded / total : 0;
+  const barLength = 20;
+  const filled = Math.round(barLength * percent);
+  const bar = "=".repeat(filled) + "-".repeat(barLength - filled);
+  const display = total
+    ? `${(percent * 100).toFixed(1)}%`
+    : `${(downloaded / 1024).toFixed(1)} KB`;
+  printf(`\r Downloading [${bar}] ${display}`);
 }
 
-pimmy.prototype.cache.prototype.resolve = function(key) {
-  let app_path = path.prototype.resolveFrom(rew.prototype.process.prototype.cwd, key)
-  if (exists(app_path)) {
-    key
-  }
-  return pimmy.prototype.cache.prototype.parse_name(key)
+function generate_id_for_existing(app_path) {
+  let yml = pimmy.prototype.utils.prototype.readYaml(path.prototype.join(app_path, 'app.yaml'))
+  return genUid(
+    14,
+    yml.manifest.package + (yml.manifest.version || "")
+  ) + yml.manifest.package
 }
+
+function parse_url_pattern(input) {
+  let match = input.match(_url_pattern);
+  if (!match) throw new Error("Invalid input format");
+
+  let unarchiver, sha, url;
+
+  [, unarchiver, sha, url] = match;
+  return {
+    url,
+    unarchiver,
+    sha: sha || undefined,
+  }
+}
+
+let unarchivers = null
+async function unarchive(unarchiver, input, output) {
+  pimmy.prototype.logger.prototype.action("", "-", "Preparing extractors(REW_FFI_LOAD)")
+  let symbolMap = instantiate(class {
+    zip_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_gz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_xz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_bz2_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_zst_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    rar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    sevenz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+  })
+
+  if (!unarchivers) unarchivers = ffi.prototype.open(rew.prototype.path.prototype.resolve("../../.artifacts/libarchiveman.so"), symbolMap)
+
+  return await unarchivers[unarchiver + '_unarchive'](rew.prototype.ptr.prototype.of(
+    rew.prototype.encoding.prototype.stringToBytes(input)
+  ), rew.prototype.ptr.prototype.of(
+    rew.prototype.encoding.prototype.stringToBytes(output)
+  ))
+}
+
+async function download_file(url, cache_file) {
+  let res = await net.prototype.fetch(url)
+  const total = Number(res.headers.get("content-length")) || 0
+  let downloaded = 0
+
+
+  let file = await open(cache_file, {
+    write: true,
+    create: true,
+    truncate: true,
+  })
+  
+  let reader = res.body.getReader()
+  let writer = file.writable.getWriter()
+
+  while (true) {
+    let done, value;
+    ({ done, value } = await reader.read())
+    if (done) break
+    await writer.write(value)
+    downloaded = downloaded + value.length
+    renderProgress(downloaded, total)
+  }
+  
+  printf("\r\n")
+  return file.close()
+}
+
+async function build_path(path) {
+  return await pimmy.prototype.builder.prototype.build(path)
+}
+
+pimmy.prototype.cache.prototype.install = async function(cache_path, update) {
+  pimmy.prototype.logger.prototype.title("", "*", "Installing from cache entry")
+  let app_yaml = path.prototype.join(cache_path, 'app.yaml')
+  let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+
+  pimmy.prototype.logger.prototype.action("", "-", `Installing ${config.manifest.package}`)
+  let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', config.manifest.package)
+  if (update && exists(dest)) {
+    await rm(dest, true)
+  }
+  await copy(cache_path, dest)
+  return pimmy.prototype.logger.prototype.action("", "-", "App installed")
+}
+
+
+pimmy.prototype.cache.prototype.resolve = async function(key, update) {
+  pimmy.prototype.logger.prototype.title("", "*", `Resolve cache entry ${key}`)
+  let app_path = rew.prototype.path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, key))
+  if (exists(app_path)) {
+    let cache_path = path.prototype.join(_cache_path, generate_id_for_existing(app_path))
+    if (exists(cache_path)) rm(cache_path, true)
+    await copy(app_path, cache_path)
+    return cache_path
+  }
+  else if (_url_pattern.exec(key)) {
+    let url, unarchiver, sha;
+    ({
+      url,
+      unarchiver,
+      sha
+    } = parse_url_pattern(key))
+    let uid = genUid(
+      24,
+      url
+    )
+    let cache_path = path.prototype.join(_cache_path, uid)
+    pimmy.prototype.logger.prototype.info("Found URL entry")
+    pimmy.prototype.logger.prototype.action("", "-", `Downloading URL entry ${url} as cache entry ${uid}`)
+    
+    mkdir(cache_path, true)
+
+    let cache_file = path.prototype.join(cache_path, `entry.${unarchiver.replaceAll("_", ".")}`)
+
+    if (!update && exists(cache_file)) {
+      if (sha) {
+        if (rew.prototype.fs.prototype.sha(cache_file) != sha) {
+          await download_file(url, cache_file)
+        }
+        else {
+          pimmy.prototype.logger.prototype.info("Found Cache skipping Download")
+        }
+      }
+      else {
+        pimmy.prototype.logger.prototype.info("Found Cache skipping Download")
+      }
+    }
+    else await download_file(url, cache_file)
+
+    let unarachive_path = path.prototype.join(cache_path, "_out")
+    mkdir(unarachive_path, true)
+
+    await unarchive(unarchiver, cache_file, unarachive_path)
+    let app_yaml = path.prototype.join(unarachive_path, 'app.yaml')
+    if (!exists(app_yaml)) {
+      pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
+      return null
+    }
+    let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+    if (config.install?.build) await build_path(unarachive_path)
+    if (config.install?.cleanup) {
+      for (const item of config.install.cleanup) {
+        let item_path = path.prototype.join(unarachive_path, item)
+        if (exists(item_path)) rm(item_path, true)
+      }
+    }
+    return unarachive_path
+  }
+  else if (key.startsWith('github:')) {
+    let uid = genUid(
+      24,
+      key
+    )
+    let cache_path = path.prototype.join(_cache_path, uid)
+    let homeUrl, branch, commit;
+    ({homeUrl, branch, commit} = pimmy.prototype.utils.prototype.resolveGithubURL(key))
+
+    pimmy.prototype.logger.prototype.info("Found GIT entry")
+    pimmy.prototype.logger.prototype.action("", "-", `Cloning repo ${homeUrl} as cache entry ${uid}`)
+    
+    await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path)
+    if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path})
+    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path})
+    return cache_path
+  }
+  else {
+    let isInRepo = pimmy.prototype.repo.prototype.lookup(key)
+    if (isInRepo) {
+      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update)
+    }
+    else {
+      pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
+      return null
+    }
+  }
+}
+  
     
 
 
@@ -1669,25 +1984,10 @@ repo.prototype.lookup = function(pkgname) {
 }
 
 
-function _resolveGithubURL(github_url) {
-  var match, owner, repoName, branch, commit, baseUrl;
-  match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
-  if (!match) {
-    pimmy.prototype.logger.prototype.error(`Invalid GitHub URL: ${github_url}`)
-    return null
-  };
-
-  [, owner, repoName, branch, commit] = match
-  branch = branch ?? "main"
-
-  baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
-  return ({baseUrl, owner, repoName, branch, commit})
-}
-
 
 async function _resolveGithub(name, github_url) {
   var baseUrl, pkg, files, app_content, app, icon_path, readme;
-  ({ baseUrl } = _resolveGithubURL(github_url))
+  ({ baseUrl } = pimmy.prototype.utils.prototype.resolveGithubURL(github_url))
 
   pkg = {
     name: name,
@@ -1742,11 +2042,12 @@ async function _parseRepo(name, repo_url, seen = {}, result = []) {
   let ref;for (const pkgname in ref = repo.packages) {const value = ref[pkgname];
     if (typeof value == 'string' && value.startsWith("github:")) {
       pkg = await _resolveGithub(pkgname, value)
+      if (pkg) pkg.repo = name
       if (pkg) result.push(pkg)
     }
     else {
       if (value.readme) value.readme = await _fetchFile(value.readme)
-      result.push({ name: pkgname, ...value })
+      result.push({ name: pkgname, repo: name, ...value })
     }
   }
 
@@ -1789,7 +2090,7 @@ repo.prototype.init = function() {
   if (init_file?._repo) return
   pimmy_data_path = conf.prototype.path()
   mkdir(path.prototype.join(pimmy_data_path, 'cache'))
-  mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))
+  mkdir(path.prototype.join(pimmy_data_path, 'cache/app-cache'))
   mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))
   mkdir(path.prototype.join(pimmy_data_path, 'repo'))
 
