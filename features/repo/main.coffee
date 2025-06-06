@@ -141,5 +141,4 @@ function repo::init()
   }
 
   rew::conf::writeAuto 'init.yaml', { _init: init_file._init ?? false, _repo: true }
-  pimmy::logger::action 'green', 'X', "Created rewpkgs repo"
 

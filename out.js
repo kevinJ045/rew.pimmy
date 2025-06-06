@@ -38,6 +38,26 @@ pimmy.prototype.init.prototype.start();
 pimmy.prototype.repo.prototype.init();
 
 module.exports.main =  async function main() {
+
+  pimmy.prototype.logger.prototype.title("Hello, this is a test!")
+  pimmy.prototype.logger.prototype.subtitle("And will not do anything!")
+  pimmy.prototype.logger.prototype.verbose("And will not do anything!")
+  // myVal = pimmy::logger::input "Your name please"
+  // pimmy::logger::log "MyValue:", myVal
+  pimmy.prototype.logger.prototype.loading("Downloading")
+  await new Promise(function(r) {
+    return setTimeout(r, 3000)
+  })
+  pimmy.prototype.logger.prototype.stopLoading("Downloaded")
+  pimmy.prototype.logger.prototype.info("Something else")
+  pimmy.prototype.logger.prototype.warn("Something else")
+  pimmy.prototype.logger.prototype.error("Something else")
+  pimmy.prototype.logger.prototype.log("Something else")
+  pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "Something else")
+  pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(2), "Something else")
+  pimmy.prototype.logger.prototype.log("Something else")
+  pimmy.prototype.logger.prototype.closeTitle("Ha done")
+
   
   // when building, do not resolve the app elsewhere unless cache is enabled
   if (cli_options.build && typeof cli_options.app == 'string') {
@@ -1450,39 +1470,152 @@ return globalThis.module.exports;
 with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::logger");
 
-pimmy.prototype.logger.prototype.LOG = false;
 
-pimmy.prototype.logger.prototype.log = (color, prefix, icon, ...logs) => {
+let black     = (t) => `\x1b[30m${t}\x1b[0m`
+let red       = (t) => `\x1b[31m${t}\x1b[0m`
+let green     = (t) => `\x1b[32m${t}\x1b[0m`
+let yellow    = (t) => `\x1b[33m${t}\x1b[0m`
+let blue      = (t) => `\x1b[34m${t}\x1b[0m`
+let magenta   = (t) => `\x1b[35m${t}\x1b[0m`
+let cyan      = (t) => `\x1b[36m${t}\x1b[0m`
+let white     = (t) => `\x1b[37m${t}\x1b[0m`
+let gray      = (t) => `\x1b[90m${t}\x1b[0m`
+
+let bgRed     = (t) => `\x1b[41m${t}\x1b[0m`
+let bgGreen   = (t) => `\x1b[42m${t}\x1b[0m`
+let bgYellow  = (t) => `\x1b[43m${t}\x1b[0m`
+let bgBlue    = (t) => `\x1b[44m${t}\x1b[0m`
+let bgMagenta = (t) => `\x1b[45m${t}\x1b[0m`
+let bgCyan    = (t) => `\x1b[46m${t}\x1b[0m`
+let bgWhite   = (t) => `\x1b[47m${t}\x1b[0m`
+let bgGray    = (t) => `\x1b[100m${t}\x1b[0m`
+
+let bold      = (t) => `\x1b[1m${t}\x1b[22m`
+let dim       = (t) => `\x1b[2m${t}\x1b[22m`
+let italic    = (t) => `\x1b[3m${t}\x1b[23m`
+let underline = (t) => `\x1b[4m${t}\x1b[24m`
+let inverse   = (t) => `\x1b[7m${t}\x1b[27m`
+let hidden    = (t) => `\x1b[8m${t}\x1b[28m`
+let strike    = (t) => `\x1b[9m${t}\x1b[29m`
+
+let normal    = (t) => `\x1b[0m${t}\x1b[0m`
+
+let symbols =  {
+  info: "",
+  warn: "",
+  err: "",
+  suc: "",
+  question: "",
+  "package": "",
+  git: "󰊢",
+  github: "",
+  download: "",
+  build: "",
+  terminal: "",
+}
+
+let startPrefix      = '╭'
+let separator        = '│'
+let middlePrefix     = '├'
+let endPrefix        = '╰'
+
+pimmy.prototype.logger.prototype.LOG = false;
+print()
+let printnorm = function(logs) {
+  print(gray(separator))
+  return print(gray(middlePrefix) + " " + logs)
+}
+
+pimmy.prototype.logger.prototype.title = (...logs) => {
+  return print(gray(startPrefix) + " " + logs.join(" "))
+}
+
+pimmy.prototype.logger.prototype.closeTitle = (...logs) => {
+  print(gray(separator))
+  return print(gray(endPrefix) + " " + logs.join(" "))
+}
+
+pimmy.prototype.logger.prototype.subtitle = (...logs) => {
+  return print(gray(separator) + " " + logs.join(" "))
+}
+
+pimmy.prototype.logger.prototype.verbose = (...logs) => {
   if (pimmy.prototype.logger.prototype.LOG) {
-    let text = '%c' + prefix + ((icon? ('[' + icon + '] ') : '')) + logs.join(' ')
-    return rew.prototype.io.prototype.out.print(text, `color: ${color};font-weight:bold`)
+    return printnorm(bold(gray(symbols.terminal)) + " " + logs.join(" "))
   };return
 }
 
-pimmy.prototype.logger.prototype.title = (color, icon, ...logs) => {
-  return pimmy.prototype.logger.prototype.log(color || 'white', '', icon, ...logs)
+pimmy.prototype.logger.prototype.log = (...logs) => {
+  return printnorm(logs.join(" "))
 }
 
-pimmy.prototype.logger.prototype.subtitle = (color, icon, ...logs) => {
-  return pimmy.prototype.logger.prototype.log(color || 'white', '=> ', icon, ...logs)
-}
-
-pimmy.prototype.logger.prototype.action = (color, icon, ...logs) => {
-  return pimmy.prototype.logger.prototype.log(color || 'white', '===> ', icon, ...logs)
+pimmy.prototype.logger.prototype.info = (...logs) => {
+  return printnorm(blue(symbols.info) + ' ' + logs.join(" "))
 }
 
 pimmy.prototype.logger.prototype.error = (...logs) => {
-  return rew.prototype.io.prototype.out.print('%c[ERROR] ' + logs.join(' '), 'color: red;font-weight:bold')
-} 
-
-pimmy.prototype.logger.prototype.info = (...logs) => {
-  return rew.prototype.io.prototype.out.print('[LOG] ' + logs.join(' '))
+  return printnorm(bgRed(' ' + black(symbols.err + ' ERROR ')) + ' ' + red(logs.join(" ")))
 }
 
 pimmy.prototype.logger.prototype.warn = (...logs) => {
-  return rew.prototype.io.prototype.out.print('%c[WARN] ' + logs.join(' '), 'color: yellow;font-weight:bold')
-} 
+  return printnorm(bgYellow(' ' + black(symbols.warn + ' WARN ')) + ' ' + yellow(logs.join(" ")))
+}
 
+pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
+  if (!logs.length) {
+    logs = [icon]
+    icon = blue(symbols.question)
+  }
+  print(gray(separator))
+  let after_prefix =  " " + icon + " " + logs.join(" ") + " ";
+  let result = input(gray(endPrefix) + after_prefix)
+  print("\x1b[1A\r" + gray(middlePrefix) + after_prefix)
+  return result
+}
+
+
+let loader_frames = [
+  '⠋',
+  '⠙',
+  '⠸',
+  '⠴',
+  '⠦',
+  '⠇'
+]
+let loader_interval = null
+let loader_i = 0
+let loader_text = 'Loading'
+
+let _loader_frames = () => {
+  let frame = loader_frames[loader_i % loader_frames.length]
+  printf(`\r${gray(endPrefix)} ${pickRandom(cyan, red, blue, yellow, magenta)(frame)} ${loader_text}`)
+  return loader_i++
+}
+
+let loader_start = function(text) {
+  print(gray(separator))
+  if (text) loader_text = text
+  if (loader_interval != null) { return }
+
+  return loader_interval = setInterval(_loader_frames, 100)
+}
+
+let loader_say = function(newText) {
+  return loader_text = newText
+}
+
+let loader_stop = function() {
+  if (!(loader_interval != null)) { return }
+  clearInterval(loader_interval)
+  loader_interval = null
+  return printf("\x1b[1A\r")
+}
+
+pimmy.prototype.logger.prototype.loading = loader_start 
+pimmy.prototype.logger.prototype.setLoadeg = loader_say
+pimmy.prototype.logger.prototype.stopLoading = loader_stop
+
+pimmy.prototype.logger.prototype.indent = function(x = 1) { return `\r${gray(middlePrefix+'─'.repeat(x))}` }
 }
 return globalThis.module.exports;
 }          

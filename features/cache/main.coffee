@@ -80,26 +80,32 @@ function download_file(url, cache_file)
 function build_path(path)
   await pimmy::builder::build path
 
-pimmy::cache::install = (cache_path, update) ->
-  pimmy::logger::title "", "*", "Installing from cache entry"
+pimmy::cache::install = (cache_path, update, ask) ->
+  pimmy::logger::title "Installing from cache entry"
   app_yaml = path::join cache_path, 'app.yaml'
   config = pimmy::utils::readYaml app_yaml
 
-  pimmy::logger::action "", "-", "Installing #{config.manifest.package}"
+  # if ask
+
+  pimmy::logger::log "Installing #{config.manifest.package}"
   dest = path::join pimmy::init::ROOT, 'apps', config.manifest.package
+
+  # dependency resolution goes here
+
   if update and exists dest
     await rm dest, true
   await copy cache_path, dest
-  pimmy::logger::action "", "-", "App installed"
+  pimmy::logger::closeTitle "App installed"
 
 
-pimmy::cache::resolve = (key, update) ->
-  pimmy::logger::title "", "*", "Resolve cache entry #{key}"
+pimmy::cache::resolve = (key, update, isRecursed) ->
+  unless isRecursed then pimmy::logger::title "Resolve cache entry #{key}"
   app_path = rew::path::normalize path::join rew::process::cwd, key
   if exists app_path
     cache_path = path::join _cache_path, generate_id_for_existing(app_path)
     if exists cache_path then rm cache_path, true
     await copy app_path, cache_path
+    pimmy::logger::closeTitle()
     return cache_path
   else if _url_pattern.exec key
     {
@@ -113,7 +119,7 @@ pimmy::cache::resolve = (key, update) ->
     )
     cache_path = path::join _cache_path, uid
     pimmy::logger::info "Found URL entry"
-    pimmy::logger::action "", "-", "Downloading URL entry #{url} as cache entry #{uid}"
+    pimmy::logger::verbose "Downloading URL entry #{url} as cache entry #{uid}"
     
     mkdir cache_path, true
 
@@ -124,9 +130,9 @@ pimmy::cache::resolve = (key, update) ->
         if rew::fs::sha(cache_file) != sha
           await download_file url, cache_file
         else
-          pimmy::logger::info "Found Cache skipping Download"
+          pimmy::logger::verbose "Found Cache skipping Download"
       else
-        pimmy::logger::info "Found Cache skipping Download"
+        pimmy::logger::verbose "Found Cache skipping Download"
     else await download_file url, cache_file
 
     unarachive_path = path::join cache_path, "_out"
@@ -136,6 +142,7 @@ pimmy::cache::resolve = (key, update) ->
     app_yaml = path::join unarachive_path, 'app.yaml'
     unless exists app_yaml
       pimmy::logger::error "Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed"
+      pimmy::logger::closeTitle()
       return null
     config = pimmy::utils::readYaml app_yaml
     if config.install?.build then await build_path(unarachive_path)
@@ -143,6 +150,7 @@ pimmy::cache::resolve = (key, update) ->
       for item of config.install.cleanup
         item_path = path::join unarachive_path, item
         if exists item_path then rm item_path, true
+    pimmy::logger::closeTitle()
     return unarachive_path
   else if key.startsWith('github:')
     uid = genUid(
@@ -153,18 +161,20 @@ pimmy::cache::resolve = (key, update) ->
     {homeUrl, branch, commit} = pimmy::utils::resolveGithubURL key
 
     pimmy::logger::info "Found GIT entry"
-    pimmy::logger::action "", "-", "Cloning repo #{homeUrl} as cache entry #{uid}"
+    pimmy::logger::log "Cloning repo #{homeUrl} as cache entry #{uid}"
     
     await shell::exec 'git clone ' + homeUrl + " " + cache_path
     if branch then await shell::exec "git checkout #{branch}", cwd: cache_path
     if commit then await shell::exec "git reset --hard #{commit}", cwd: cache_path
+      pimmy::logger::closeTitle()
     return cache_path
   else
     isInRepo = pimmy::repo::lookup key
     if isInRepo
-      return await pimmy::cache::resolve isInRepo.url, update
+      return await pimmy::cache::resolve isInRepo.url, update, true
     else
       pimmy::logger::error "Couldn't resolve to cache entry #{key}"
+      pimmy::logger::closeTitle()
       return null
   
     
