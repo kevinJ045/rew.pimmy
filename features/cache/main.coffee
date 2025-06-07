@@ -34,7 +34,7 @@ function parse_url_pattern(input)
 
 unarchivers = null
 function unarchive(unarchiver, input, output)
-  pimmy::logger::action "", "-", "Preparing extractors(REW_FFI_LOAD)"
+  pimmy::logger::verbose "Preparing extractors(REW_FFI_LOAD)"
   symbolMap = instantiate class
     ffi_type(ffi::ptr, ffi::ptr) zip_unarchive       = -> 'i32'
     ffi_type(ffi::ptr, ffi::ptr) tar_unarchive       = -> 'i32'
@@ -80,15 +80,29 @@ function download_file(url, cache_file)
 function build_path(path)
   await pimmy::builder::build path
 
-pimmy::cache::install = (cache_path, update, ask) ->
+pimmy::cache::install = (cache_path, update, silent) ->
   pimmy::logger::title "Installing from cache entry"
   app_yaml = path::join cache_path, 'app.yaml'
   config = pimmy::utils::readYaml app_yaml
+  app_name = config.manifest.package
 
-  # if ask
+  unless silent
+    pimmy::logger::log ":icon package", "Package Info for #{app_name}";
+    pimmy::logger::log pimmy::logger::indent(), "@gray(version)", "#{config.manifest.version or "unknown"}";
+    if config.manifest.github
+      pimmy::logger::log pimmy::logger::indent(), ":icon github", "github", "#{config.manifest.github}";
+    if config.manifest.description
+      pimmy::logger::log pimmy::logger::indent(), ":icon info", "description", "#{config.manifest.description}";
+    if config.manifest.tags
+      pimmy::logger::log pimmy::logger::indent(), "tags:"
+      pimmy::logger::log pimmy::logger::indent(2), "!#{config.manifest.tags.join(' ')}!";
+    response = pimmy::logger::input "Proceed to install? (y/n)"
+    unless response.toLowerCase().startsWith 'y'
+      pimmy::logger::closeTitle "App installation cancelled"
+      return
 
-  pimmy::logger::log "Installing #{config.manifest.package}"
-  dest = path::join pimmy::init::ROOT, 'apps', config.manifest.package
+  pimmy::logger::log "Installing #{app_name}"
+  dest = path::join pimmy::init::ROOT, 'apps', app_name
 
   # dependency resolution goes here
 
@@ -136,7 +150,11 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
     else await download_file url, cache_file
 
     unarachive_path = path::join cache_path, "_out"
-    mkdir unarachive_path, true
+    built_path = path::join cache_path, "_out/.built"
+    if exists built_path
+      pimmy::logger::closeTitle("Cache resolved")
+      return unarachive_path
+    else mkdir unarachive_path, true
 
     await unarchive(unarchiver, cache_file, unarachive_path)
     app_yaml = path::join unarachive_path, 'app.yaml'
@@ -150,6 +168,7 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
       for item of config.install.cleanup
         item_path = path::join unarachive_path, item
         if exists item_path then rm item_path, true
+    await write built_path, ''
     pimmy::logger::closeTitle()
     return unarachive_path
   else if key.startsWith('github:')

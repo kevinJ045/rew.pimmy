@@ -26,8 +26,12 @@ build:
   - input: ./main.qrew
     output: main.qrew
     using: demo_builder
+dependencies:
+  - "@rewpkgs/rew.gtk"
 install:
   build: true
+  bin:
+    test-rew-app: main
   cleanup:
     - entry.zip
     - .git

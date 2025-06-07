@@ -38,26 +38,6 @@ pimmy.prototype.init.prototype.start();
 pimmy.prototype.repo.prototype.init();
 
 module.exports.main =  async function main() {
-
-  pimmy.prototype.logger.prototype.title("Hello, this is a test!")
-  pimmy.prototype.logger.prototype.subtitle("And will not do anything!")
-  pimmy.prototype.logger.prototype.verbose("And will not do anything!")
-  // myVal = pimmy::logger::input "Your name please"
-  // pimmy::logger::log "MyValue:", myVal
-  pimmy.prototype.logger.prototype.loading("Downloading")
-  await new Promise(function(r) {
-    return setTimeout(r, 3000)
-  })
-  pimmy.prototype.logger.prototype.stopLoading("Downloaded")
-  pimmy.prototype.logger.prototype.info("Something else")
-  pimmy.prototype.logger.prototype.warn("Something else")
-  pimmy.prototype.logger.prototype.error("Something else")
-  pimmy.prototype.logger.prototype.log("Something else")
-  pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "Something else")
-  pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(2), "Something else")
-  pimmy.prototype.logger.prototype.log("Something else")
-  pimmy.prototype.logger.prototype.closeTitle("Ha done")
-
   
   // when building, do not resolve the app elsewhere unless cache is enabled
   if (cli_options.build && typeof cli_options.app == 'string') {
@@ -1471,34 +1451,34 @@ with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::logger");
 
 
-let black     = (t) => `\x1b[30m${t}\x1b[0m`
-let red       = (t) => `\x1b[31m${t}\x1b[0m`
-let green     = (t) => `\x1b[32m${t}\x1b[0m`
-let yellow    = (t) => `\x1b[33m${t}\x1b[0m`
-let blue      = (t) => `\x1b[34m${t}\x1b[0m`
-let magenta   = (t) => `\x1b[35m${t}\x1b[0m`
-let cyan      = (t) => `\x1b[36m${t}\x1b[0m`
-let white     = (t) => `\x1b[37m${t}\x1b[0m`
-let gray      = (t) => `\x1b[90m${t}\x1b[0m`
+this.black     = (t) => `\x1b[30m${t}\x1b[0m`
+this.red       = (t) => `\x1b[31m${t}\x1b[0m`
+this.green     = (t) => `\x1b[32m${t}\x1b[0m`
+this.yellow    = (t) => `\x1b[33m${t}\x1b[0m`
+this.blue      = (t) => `\x1b[34m${t}\x1b[0m`
+this.magenta   = (t) => `\x1b[35m${t}\x1b[0m`
+this.cyan      = (t) => `\x1b[36m${t}\x1b[0m`
+this.white     = (t) => `\x1b[37m${t}\x1b[0m`
+this.gray      = (t) => `\x1b[90m${t}\x1b[0m`
 
-let bgRed     = (t) => `\x1b[41m${t}\x1b[0m`
-let bgGreen   = (t) => `\x1b[42m${t}\x1b[0m`
-let bgYellow  = (t) => `\x1b[43m${t}\x1b[0m`
-let bgBlue    = (t) => `\x1b[44m${t}\x1b[0m`
-let bgMagenta = (t) => `\x1b[45m${t}\x1b[0m`
-let bgCyan    = (t) => `\x1b[46m${t}\x1b[0m`
-let bgWhite   = (t) => `\x1b[47m${t}\x1b[0m`
-let bgGray    = (t) => `\x1b[100m${t}\x1b[0m`
+this.bgRed     = (t) => `\x1b[41m${t}\x1b[0m`
+this.bgGreen   = (t) => `\x1b[42m${t}\x1b[0m`
+this.bgYellow  = (t) => `\x1b[43m${t}\x1b[0m`
+this.bgBlue    = (t) => `\x1b[44m${t}\x1b[0m`
+this.bgMagenta = (t) => `\x1b[45m${t}\x1b[0m`
+this.bgCyan    = (t) => `\x1b[46m${t}\x1b[0m`
+this.bgWhite   = (t) => `\x1b[47m${t}\x1b[0m`
+this.bgGray    = (t) => `\x1b[100m${t}\x1b[0m`
 
-let bold      = (t) => `\x1b[1m${t}\x1b[22m`
-let dim       = (t) => `\x1b[2m${t}\x1b[22m`
-let italic    = (t) => `\x1b[3m${t}\x1b[23m`
-let underline = (t) => `\x1b[4m${t}\x1b[24m`
-let inverse   = (t) => `\x1b[7m${t}\x1b[27m`
-let hidden    = (t) => `\x1b[8m${t}\x1b[28m`
-let strike    = (t) => `\x1b[9m${t}\x1b[29m`
+this.bold      = (t) => `\x1b[1m${t}\x1b[22m`
+this.dim       = (t) => `\x1b[2m${t}\x1b[22m`
+this.italic    = (t) => `\x1b[3m${t}\x1b[23m`
+this.underline = (t) => `\x1b[4m${t}\x1b[24m`
+this.inverse   = (t) => `\x1b[7m${t}\x1b[27m`
+this.hidden    = (t) => `\x1b[8m${t}\x1b[28m`
+this.strike    = (t) => `\x1b[9m${t}\x1b[29m`
 
-let normal    = (t) => `\x1b[0m${t}\x1b[0m`
+this.normal    = (t) => `\x1b[0m${t}\x1b[0m`
 
 let symbols =  {
   info: "",
@@ -1520,45 +1500,70 @@ let middlePrefix     = '├'
 let endPrefix        = '╰'
 
 pimmy.prototype.logger.prototype.LOG = false;
-print()
 let printnorm = function(logs) {
   print(gray(separator))
   return print(gray(middlePrefix) + " " + logs)
 }
 
+let parse_log = (log) => {
+  if (log.startsWith('!')) {
+    return log.slice(1, -1)
+  }
+  else if (log.startsWith(':icon')) {
+    return symbols[log.split(' ')[1]]
+  }
+  else if (log.startsWith('@')) {
+    let names = log.slice(1, -1).split('(')[0].split(',')
+    let all = log.split('(')[1].split(')')[0]
+    
+    for (const name of names) {
+      all = this[name](all)
+    }
+    return all
+  }
+  else {
+    return log
+  }
+}
+
+let resolve_logs = function(logs) {
+  return logs.map(parse_log).join(' ')
+}
+
 pimmy.prototype.logger.prototype.title = (...logs) => {
-  return print(gray(startPrefix) + " " + logs.join(" "))
+  print()
+  return print(gray(startPrefix) + " " + resolve_logs(logs))
 }
 
 pimmy.prototype.logger.prototype.closeTitle = (...logs) => {
   print(gray(separator))
-  return print(gray(endPrefix) + " " + logs.join(" "))
+  return print(gray(endPrefix) + " " + resolve_logs(logs))
 }
 
 pimmy.prototype.logger.prototype.subtitle = (...logs) => {
-  return print(gray(separator) + " " + logs.join(" "))
+  return print(gray(separator) + " " + resolve_logs(logs))
 }
 
 pimmy.prototype.logger.prototype.verbose = (...logs) => {
   if (pimmy.prototype.logger.prototype.LOG) {
-    return printnorm(bold(gray(symbols.terminal)) + " " + logs.join(" "))
+    return printnorm(bold(gray(symbols.terminal)) + " " + resolve_logs(logs))
   };return
 }
 
 pimmy.prototype.logger.prototype.log = (...logs) => {
-  return printnorm(logs.join(" "))
+  return printnorm(resolve_logs(logs))
 }
 
 pimmy.prototype.logger.prototype.info = (...logs) => {
-  return printnorm(blue(symbols.info) + ' ' + logs.join(" "))
+  return printnorm(blue(symbols.info) + ' ' + resolve_logs(logs))
 }
 
 pimmy.prototype.logger.prototype.error = (...logs) => {
-  return printnorm(bgRed(' ' + black(symbols.err + ' ERROR ')) + ' ' + red(logs.join(" ")))
+  return printnorm(bgRed(' ' + black(symbols.err + ' ERROR ')) + ' ' + red(resolve_logs(logs)))
 }
 
 pimmy.prototype.logger.prototype.warn = (...logs) => {
-  return printnorm(bgYellow(' ' + black(symbols.warn + ' WARN ')) + ' ' + yellow(logs.join(" ")))
+  return printnorm(bgYellow(' ' + black(symbols.warn + ' WARN ')) + ' ' + yellow(resolve_logs(logs)))
 }
 
 pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
@@ -1567,7 +1572,7 @@ pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
     icon = blue(symbols.question)
   }
   print(gray(separator))
-  let after_prefix =  " " + icon + " " + logs.join(" ") + " ";
+  let after_prefix =  " " + icon + " " + resolve_logs(logs) + " ";
   let result = input(gray(endPrefix) + after_prefix)
   print("\x1b[1A\r" + gray(middlePrefix) + after_prefix)
   return result
@@ -1676,20 +1681,16 @@ pimmy.prototype.init.prototype._set_init = function() {
 }
 
 pimmy.prototype.init.prototype._copy_apps = async function() {
-  pimmy.prototype.logger.prototype.subtitle('blue', '', 'Copy Apps')
   let apps = rew.prototype.fs.prototype.readdir('./apps')
-  for (const app of apps) {
+  const results=[];for (const app of apps) {
     let app_path = rew.prototype.path.prototype.normalize(app.path)
     let dest = rew.prototype.path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app.name)
-    await rew.prototype.fs.prototype.copy(app.path, dest)
-    pimmy.prototype.logger.prototype.action('green', 'X', "Copied", app.name, "to", dest)
-  }
-  return pimmy.prototype.logger.prototype.subtitle('blue', '', "Apps Copied")
+    results.push(await rew.prototype.fs.prototype.copy(app.path, dest))
+  };return results;
 }
 
 pimmy.prototype.init.prototype.start = function() {
   if (pimmy.prototype.init.prototype._check_init()) return
-  pimmy.prototype.logger.prototype.title('', '', 'Init Start')
   pimmy.prototype.init.prototype._copy_apps()
   pimmy.prototype.init.prototype._set_init()
   return pimmy.prototype.repo.prototype.init()
@@ -1712,45 +1713,69 @@ pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe
   if (!rew.prototype.fs.prototype.exists(app_conf_path)) throw new Error('App not found');
   
   let config = pimmy.prototype.utils.prototype.readYaml(app_conf_path)
-  pimmy.prototype.logger.prototype.title('', '*', 'Building App', config.manifest.package)
+  pimmy.prototype.logger.prototype.title('Building App', config.manifest.package)
   
   if (!(config.crates || config.build)) throw new Error('no build candidates found');
   
   if (config.cakes) {
+    pimmy.prototype.logger.prototype.log('Found Cakes ')
     for (const cakefile of config.cakes) {
-      let cake = await imp(rew.prototype.path.prototype.join(app_path, cakefile))
-      if (cake?.builders) {
-        for (const key in cake.builders) {
-          pimmy.prototype.builder.prototype[key] = cake.builders[key]
+      try {
+        let cake = await imp(rew.prototype.path.prototype.join(app_path, cakefile))
+        if (cake?.builders) {
+          for (const key in cake.builders) {
+            pimmy.prototype.builder.prototype[key] = cake.builders[key]
+          }
         }
+        else {
+          pimmy.prototype.logger.prototype.warn('Cake did not export any builders')
+        }
+      }
+      catch(e) {
+        pimmy.prototype.logger.prototype.log('Failed to load cake')
       }
     }
   }
 
+
   let triggers = [];
 
+  let errors = 0
+
   if (config.crates) {
-    cargo.prototype.build_crates_for(app_path, config, safe_mode, triggers)
+    if (!cargo.prototype.build_crates_for(app_path, config, safe_mode, triggers)) {
+      errors += 1
+    }
   }
   
   if (config.build) {
-    const results=[];for (const file of config.build) {
+    for (const file of config.build) {
       if (file.using) { 
         let build_fn = pimmy.prototype.builder.prototype[file.using]
-        if (!build_fn) throw new ReferenceError(`Builder ${file.using} does not exist`)
+        if (!build_fn) {
+          pimmy.prototype.logger.prototype.error(`Builder ${file.using} does not exist`)
+          errors++
+          break
+        }
         let input_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.input))
         let output_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.output))
-        if (!exists(input_path)) throw new Error(`Input file ${input_path} not found`)
+        if (!exists(input_path)) {
+          pimmy.prototype.logger.prototype.error(`Input file ${input_path} not found`)
+          errors++
+          break
+        }
         await build_fn(app_path, config, file, input_path, output_path)
       }
       if (file.id) triggers.filter($ => $.id == file.id)
         .forEach($1 => $1.build())
       if (file.cleanup && !safe_mode) {
         rm(path.prototype.join(app_path, file.cleanup), true)
-        results.push(pimmy.prototype.logger.prototype.action('green', '-', 'File Cleanup'))
-      } else {results.push(void 0)}
-    };return results;
-  };return
+        pimmy.prototype.logger.prototype.info('File Cleanup')
+      }
+    }
+  }
+    
+  return pimmy.prototype.logger.prototype.closeTitle(`Finished build with ${errors} errors.`)
 }
 
 
@@ -1776,7 +1801,7 @@ with (globalThis) {
 
 function build_crate(crate, app_path, safe_mode) {
   let crate_path = path.prototype.normalize(path.prototype.join(app_path, crate.path))
-  pimmy.prototype.logger.prototype.action('green', '-', 'Building crate', crate.name)
+  pimmy.prototype.logger.prototype.info(' Building crate', crate.name)
   let result = shell.prototype.exec("cargo build --release", {cwd: crate_path, stdout: 'piped'})
   if (!crate.build) return 1;
   if (!result.success) {
@@ -1787,7 +1812,7 @@ function build_crate(crate, app_path, safe_mode) {
     return 0
   }
   printf('\x1b[1A\r')
-  pimmy.prototype.logger.prototype.action('green', 'X', 'Built Crate', crate.name)
+  pimmy.prototype.logger.prototype.info('Built Crate ', crate.name)
   if (crate.files) {
     for (const file of crate.files) {
       copy(path.prototype.join(app_path, file.input), path.prototype.join(app_path, file.output))
@@ -1796,14 +1821,14 @@ function build_crate(crate, app_path, safe_mode) {
   }
 
   if (crate.cleanup && !safe_mode) {
-    pimmy.prototype.logger.prototype.action('green', '-', 'Clean Up', crate.name)
+    pimmy.prototype.logger.prototype.info('Clean Up', crate.name)
     rm(path.prototype.join(app_path, crate.cleanup), true)
   }
   return 1
 }
 
 cargo.prototype.build_crates_for = function(app_path, app_config, safe_mode, triggers) {
-  pimmy.prototype.logger.prototype.subtitle('', '', "Building app crates for", app_config.manifest.package);
+  pimmy.prototype.logger.prototype.log(" Building app crates for", app_config.manifest.package);
   
   for (const crate of app_config.crates) {
     if (crate.trigger) {
@@ -1881,7 +1906,7 @@ function parse_url_pattern(input) {
 
 let unarchivers = null
 async function unarchive(unarchiver, input, output) {
-  pimmy.prototype.logger.prototype.action("", "-", "Preparing extractors(REW_FFI_LOAD)")
+  pimmy.prototype.logger.prototype.verbose("Preparing extractors(REW_FFI_LOAD)")
   let symbolMap = instantiate(class {
     zip_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
     tar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
@@ -1934,28 +1959,53 @@ async function build_path(path) {
   return await pimmy.prototype.builder.prototype.build(path)
 }
 
-pimmy.prototype.cache.prototype.install = async function(cache_path, update) {
-  pimmy.prototype.logger.prototype.title("", "*", "Installing from cache entry")
+pimmy.prototype.cache.prototype.install = async function(cache_path, update, silent) {
+  pimmy.prototype.logger.prototype.title("Installing from cache entry")
   let app_yaml = path.prototype.join(cache_path, 'app.yaml')
   let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+  let app_name = config.manifest.package
 
-  pimmy.prototype.logger.prototype.action("", "-", `Installing ${config.manifest.package}`)
-  let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', config.manifest.package)
+  if (!silent) {
+    pimmy.prototype.logger.prototype.log(":icon package", `Package Info for ${app_name}`);
+    pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "@gray(version)", `${config.manifest.version || "unknown"}`);
+    if (config.manifest.github) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon github", "github", `${config.manifest.github}`);
+    }
+    if (config.manifest.description) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon info", "description", `${config.manifest.description}`);
+    }
+    if (config.manifest.tags) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "tags:")
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(2), `!${config.manifest.tags.join(' ')}!`);
+    }
+    let response = pimmy.prototype.logger.prototype.input("Proceed to install? (y/n)")
+    if (!response.toLowerCase().startsWith('y')) {
+      pimmy.prototype.logger.prototype.closeTitle("App installation cancelled")
+      return
+    }
+  }
+
+  pimmy.prototype.logger.prototype.log(`Installing ${app_name}`)
+  let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app_name)
+
+  // dependency resolution goes here
+
   if (update && exists(dest)) {
     await rm(dest, true)
   }
   await copy(cache_path, dest)
-  return pimmy.prototype.logger.prototype.action("", "-", "App installed")
+  return pimmy.prototype.logger.prototype.closeTitle("App installed")
 }
 
 
-pimmy.prototype.cache.prototype.resolve = async function(key, update) {
-  pimmy.prototype.logger.prototype.title("", "*", `Resolve cache entry ${key}`)
+pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed) {
+  if (!isRecursed) pimmy.prototype.logger.prototype.title(`Resolve cache entry ${key}`)
   let app_path = rew.prototype.path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, key))
   if (exists(app_path)) {
     let cache_path = path.prototype.join(_cache_path, generate_id_for_existing(app_path))
     if (exists(cache_path)) rm(cache_path, true)
     await copy(app_path, cache_path)
+    pimmy.prototype.logger.prototype.closeTitle()
     return cache_path
   }
   else if (_url_pattern.exec(key)) {
@@ -1971,7 +2021,7 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update) {
     )
     let cache_path = path.prototype.join(_cache_path, uid)
     pimmy.prototype.logger.prototype.info("Found URL entry")
-    pimmy.prototype.logger.prototype.action("", "-", `Downloading URL entry ${url} as cache entry ${uid}`)
+    pimmy.prototype.logger.prototype.verbose(`Downloading URL entry ${url} as cache entry ${uid}`)
     
     mkdir(cache_path, true)
 
@@ -1983,22 +2033,28 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update) {
           await download_file(url, cache_file)
         }
         else {
-          pimmy.prototype.logger.prototype.info("Found Cache skipping Download")
+          pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
         }
       }
       else {
-        pimmy.prototype.logger.prototype.info("Found Cache skipping Download")
+        pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
       }
     }
     else await download_file(url, cache_file)
 
     let unarachive_path = path.prototype.join(cache_path, "_out")
-    mkdir(unarachive_path, true)
+    let built_path = path.prototype.join(cache_path, "_out/.built")
+    if (exists(built_path)) {
+      pimmy.prototype.logger.prototype.closeTitle("Cache resolved")
+      return unarachive_path
+    }
+    else mkdir(unarachive_path, true)
 
     await unarchive(unarchiver, cache_file, unarachive_path)
     let app_yaml = path.prototype.join(unarachive_path, 'app.yaml')
     if (!exists(app_yaml)) {
       pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
+      pimmy.prototype.logger.prototype.closeTitle()
       return null
     }
     let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
@@ -2009,6 +2065,8 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update) {
         if (exists(item_path)) rm(item_path, true)
       }
     }
+    await write(built_path, '')
+    pimmy.prototype.logger.prototype.closeTitle()
     return unarachive_path
   }
   else if (key.startsWith('github:')) {
@@ -2021,20 +2079,22 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update) {
     ({homeUrl, branch, commit} = pimmy.prototype.utils.prototype.resolveGithubURL(key))
 
     pimmy.prototype.logger.prototype.info("Found GIT entry")
-    pimmy.prototype.logger.prototype.action("", "-", `Cloning repo ${homeUrl} as cache entry ${uid}`)
+    pimmy.prototype.logger.prototype.log(`Cloning repo ${homeUrl} as cache entry ${uid}`)
     
     await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path)
     if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path})
-    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path})
+    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path(
+      pimmy.prototype.logger.prototype.closeTitle(),)})
     return cache_path
   }
   else {
     let isInRepo = pimmy.prototype.repo.prototype.lookup(key)
     if (isInRepo) {
-      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update)
+      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update, true)
     }
     else {
       pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
+      pimmy.prototype.logger.prototype.closeTitle()
       return null
     }
   }
@@ -2231,8 +2291,7 @@ repo.prototype.init = function() {
     rewpkgs: "//raw.githubusercontent.com/kevinJ045/rewpkgs/main/main.yaml"
   })
 
-  rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: init_file._init ?? false, _repo: true })
-  return pimmy.prototype.logger.prototype.action('green', 'X', "Created rewpkgs repo")
+  return rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: init_file._init ?? false, _repo: true })
 }
 
 

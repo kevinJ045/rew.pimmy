@@ -24,7 +24,7 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
             pimmy::builder::[key] = cake.builders[key]
         else
           pimmy::logger::warn 'Cake did not export any builders'
-      catch(e):
+      catch(e)
         pimmy::logger::log 'Failed to load cake'
 
 

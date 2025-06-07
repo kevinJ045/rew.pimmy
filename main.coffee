@@ -22,6 +22,7 @@ using pimmy::cli::option 'sync', type: 'boolean', alias: 'S'
 using pimmy::cli::option 'cache', type: 'boolean', alias: 'c'
 using pimmy::cli::option 'remove', type: 'boolean', alias: 'r'
 using pimmy::cli::option 'add', type: 'boolean', alias: 'a'
+using pimmy::cli::option 'list', type: 'boolean', alias: 'l'
 using pimmy::cli::option 'build', type: 'boolean', alias: 'b'
 # general
 using pimmy::cli::option 'safe', type: 'boolean', alias: 's'
