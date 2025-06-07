@@ -1,0 +1,8 @@
+{
+  "parseOptions": {
+    "coffeePrototype": true,
+    "autoLet": true,
+    "coffeeInterpolation": true,
+    "coffeeComment": true
+  }
+}

@@ -1,4 +1,6 @@
 package pimmy::project;
+import civet_options from "./civet.txt";
+import main_types from "./types.txt";
 
 function yesify(thing)
   if thing
@@ -48,12 +50,15 @@ function pimmy::project::new(cli_options)
   write path::join(new_path, "app.yaml"), rew::yaml::string manifest: {"package": app_name}, entries: {main: "main.coffee"}
   pimmy::logger::log ":icon file blue", "Created file", "@green(app.yaml)"
   
-  write path::join(new_path, "main.coffee"), 'print "hello"'
+  write path::join(new_path, if cli_options.types then "main.civet" else "main.coffee"), 'print "hello"'
   pimmy::logger::log ":icon file blue", "Created file", "@green(main.coffee)"
 
   if cli_options.types
-    write path::join(new_path, "index.d.ts"), '// coming soon'
+    mkdir path::join(new_path, "_types"), true
+    write path::join(new_path, "index.d.ts"), main_types
+    write path::join(new_path, "civet.config.json"), civet_options
     pimmy::logger::log ":icon file blue", "Created file", "@green(index.d.ts)"
+    pimmy::logger::log ":icon file blue", "Created file", "@green(civet.config.json)"
 
   if cli_options.git
     pimmy::logger::log ":icon git bold yellow", "git init"
