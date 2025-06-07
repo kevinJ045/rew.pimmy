@@ -81,7 +81,7 @@ function build_path(path)
   await pimmy::builder::build path
 
 pimmy::cache::install = (cache_path, update, silent) ->
-  pimmy::logger::title "Installing from cache entry"
+  unless silent then pimmy::logger::title "Installing from cache entry"
   app_yaml = path::join cache_path, 'app.yaml'
   config = pimmy::utils::readYaml app_yaml
   app_name = config.manifest.package
@@ -100,26 +100,38 @@ pimmy::cache::install = (cache_path, update, silent) ->
     unless response.toLowerCase().startsWith 'y'
       pimmy::logger::closeTitle "App installation cancelled"
       return
-
-  pimmy::logger::log "Installing #{app_name}"
+    pimmy::logger::log "Installing #{app_name}"
   dest = path::join pimmy::init::ROOT, 'apps', app_name
 
-  # dependency resolution goes here
+  if config.dependencies
+    if silent
+      for dep of config.dependencies
+        cached = await pimmy::cache::resolve dep, true, true, true
+        await pimmy::cache::install cached, true, true, true
+    else
+      pimmy::logger::info "Dependencies found"
+      for dep of config.dependencies
+        pimmy::logger::info pimmy::logger::indent(2), " #{dep}"
+      response = pimmy::logger::input "Allow install dependencies? (y/n)"
+      if response.toLowerCase().startsWith 'y'
+        for dep of config.dependencies
+          cached = await pimmy::cache::resolve dep, true, true, true
+          await pimmy::cache::install cached, true, true
 
   if update and exists dest
     await rm dest, true
   await copy cache_path, dest
-  pimmy::logger::closeTitle "App installed"
+  unless silent then pimmy::logger::closeTitle "App installed"
 
 
-pimmy::cache::resolve = (key, update, isRecursed) ->
+pimmy::cache::resolve = (key, update, isRecursed, silent) ->
   unless isRecursed then pimmy::logger::title "Resolve cache entry #{key}"
   app_path = rew::path::normalize path::join rew::process::cwd, key
   if exists app_path
     cache_path = path::join _cache_path, generate_id_for_existing(app_path)
     if exists cache_path then rm cache_path, true
     await copy app_path, cache_path
-    pimmy::logger::closeTitle()
+    unless silent then pimmy::logger::closeTitle()
     return cache_path
   else if _url_pattern.exec key
     {
@@ -132,8 +144,8 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
       url
     )
     cache_path = path::join _cache_path, uid
-    pimmy::logger::info "Found URL entry"
-    pimmy::logger::verbose "Downloading URL entry #{url} as cache entry #{uid}"
+    unless silent then pimmy::logger::info "Found URL entry"
+    unless silent then pimmy::logger::verbose "Downloading URL entry #{url} as cache entry #{uid}"
     
     mkdir cache_path, true
 
@@ -144,23 +156,23 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
         if rew::fs::sha(cache_file) != sha
           await download_file url, cache_file
         else
-          pimmy::logger::verbose "Found Cache skipping Download"
+          unless silent then pimmy::logger::verbose "Found Cache skipping Download"
       else
-        pimmy::logger::verbose "Found Cache skipping Download"
+        unless silent then pimmy::logger::verbose "Found Cache skipping Download"
     else await download_file url, cache_file
 
     unarachive_path = path::join cache_path, "_out"
     built_path = path::join cache_path, "_out/.built"
     if exists built_path
-      pimmy::logger::closeTitle("Cache resolved")
+      unless silent then pimmy::logger::closeTitle("Cache resolved")
       return unarachive_path
     else mkdir unarachive_path, true
 
     await unarchive(unarchiver, cache_file, unarachive_path)
     app_yaml = path::join unarachive_path, 'app.yaml'
     unless exists app_yaml
-      pimmy::logger::error "Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed"
-      pimmy::logger::closeTitle()
+      unless silent then pimmy::logger::error "Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed"
+      unless silent then pimmy::logger::closeTitle()
       return null
     config = pimmy::utils::readYaml app_yaml
     if config.install?.build then await build_path(unarachive_path)
@@ -169,7 +181,7 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
         item_path = path::join unarachive_path, item
         if exists item_path then rm item_path, true
     await write built_path, ''
-    pimmy::logger::closeTitle()
+    unless silent then pimmy::logger::closeTitle()
     return unarachive_path
   else if key.startsWith('github:')
     uid = genUid(
@@ -179,21 +191,21 @@ pimmy::cache::resolve = (key, update, isRecursed) ->
     cache_path = path::join _cache_path, uid
     {homeUrl, branch, commit} = pimmy::utils::resolveGithubURL key
 
-    pimmy::logger::info "Found GIT entry"
-    pimmy::logger::log "Cloning repo #{homeUrl} as cache entry #{uid}"
+    unless silent then pimmy::logger::info "Found GIT entry"
+    unless silent then pimmy::logger::log "Cloning repo #{homeUrl} as cache entry #{uid}"
     
-    await shell::exec 'git clone ' + homeUrl + " " + cache_path
-    if branch then await shell::exec "git checkout #{branch}", cwd: cache_path
-    if commit then await shell::exec "git reset --hard #{commit}", cwd: cache_path
-      pimmy::logger::closeTitle()
+    await shell::exec 'git clone ' + homeUrl + " " + cache_path, stdout: "piped"
+    if branch then await shell::exec "git checkout #{branch}", cwd: cache_path, stdout: "piped"
+    if commit then await shell::exec "git reset --hard #{commit}", cwd: cache_path, stdout: "piped"
+    unless silent then pimmy::logger::closeTitle()
     return cache_path
   else
     isInRepo = pimmy::repo::lookup key
     if isInRepo
-      return await pimmy::cache::resolve isInRepo.url, update, true
+      return await pimmy::cache::resolve isInRepo.url, update, true, silent
     else
-      pimmy::logger::error "Couldn't resolve to cache entry #{key}"
-      pimmy::logger::closeTitle()
+      unless silent then pimmy::logger::error "Couldn't resolve to cache entry #{key}"
+      unless silent then pimmy::logger::closeTitle()
       return null
   
     

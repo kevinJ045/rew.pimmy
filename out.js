@@ -14,18 +14,24 @@ rew.prototype.mod.prototype.find(module, "./features/builder/main.coffee");
 rew.prototype.mod.prototype.find(module, "./features/cache/main.coffee");
 rew.prototype.mod.prototype.find(module, "./features/repo/main.coffee");
 rew.prototype.mod.prototype.find(module, "./features/git/main.coffee");
+rew.prototype.mod.prototype.find(module, "./features/project/main.coffee");
 rew.prototype.mod.prototype.find(module, "./features/cli/main.coffee");
 
 // type
 using(pimmy.prototype.cli.prototype.option('app', {type: 'string', alias: 'A'}))
 using(pimmy.prototype.cli.prototype.option('repo', {type: 'string', alias: 'R'}))
 using(pimmy.prototype.cli.prototype.option('cached', {type: 'string', alias: 'C'}))
+using(pimmy.prototype.cli.prototype.option('new', {type: 'string', alias: 'N'}))
 // action
 using(pimmy.prototype.cli.prototype.option('sync', {type: 'boolean', alias: 'S'}))
 using(pimmy.prototype.cli.prototype.option('cache', {type: 'boolean', alias: 'c'}))
 using(pimmy.prototype.cli.prototype.option('remove', {type: 'boolean', alias: 'r'}))
 using(pimmy.prototype.cli.prototype.option('add', {type: 'boolean', alias: 'a'}))
+using(pimmy.prototype.cli.prototype.option('list', {type: 'boolean', alias: 'l'}))
 using(pimmy.prototype.cli.prototype.option('build', {type: 'boolean', alias: 'b'}))
+using(pimmy.prototype.cli.prototype.option('git', {type: 'boolean', alias: 'g'}))
+using(pimmy.prototype.cli.prototype.option('types', {type: 'boolean', alias: 't'}))
+using(pimmy.prototype.cli.prototype.option('ignore', {type: 'boolean', alias: 'i'}))
 // general
 using(pimmy.prototype.cli.prototype.option('safe', {type: 'boolean', alias: 's'}))
 // misc
@@ -38,7 +44,10 @@ pimmy.prototype.init.prototype.start();
 pimmy.prototype.repo.prototype.init();
 
 module.exports.main =  async function main() {
-  
+  if (cli_options.new) {
+    return pimmy.prototype.project.prototype.new(cli_options)
+  }
+
   // when building, do not resolve the app elsewhere unless cache is enabled
   if (cli_options.build && typeof cli_options.app == 'string') {
     if (cli_options.cache) {
@@ -51,7 +60,7 @@ module.exports.main =  async function main() {
   if (typeof cli_options.app == 'string') {
     cli_options.app = await pimmy.prototype.cache.prototype.resolve(cli_options.app)
     if (!cli_options.app) return
-  }
+  }    
 
   if (cli_options.sync) {
     if (cli_options.repo) {
@@ -1482,7 +1491,9 @@ this.normal    = (t) => `\x1b[0m${t}\x1b[0m`
 
 let symbols =  {
   info: "",
+  types: '',
   warn: "",
+  file: "",
   err: "",
   suc: "",
   question: "",
@@ -1510,7 +1521,15 @@ let parse_log = (log) => {
     return log.slice(1, -1)
   }
   else if (log.startsWith(':icon')) {
-    return symbols[log.split(' ')[1]]
+    let colors = log.split(' ')
+    colors.shift();
+    let icon = symbols[colors.shift()]
+    if (colors.length) {
+      for (const color of colors) {
+        icon = this[color.trim()](icon)
+      }
+    }
+    return icon
   }
   else if (log.startsWith('@')) {
     let names = log.slice(1, -1).split('(')[0].split(',')
@@ -1570,6 +1589,9 @@ pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
   if (!logs.length) {
     logs = [icon]
     icon = blue(symbols.question)
+  }
+  if (icon.startsWith(':icon')) {
+    icon = resolve_logs([icon])
   }
   print(gray(separator))
   let after_prefix =  " " + icon + " " + resolve_logs(logs) + " ";
@@ -1960,7 +1982,7 @@ async function build_path(path) {
 }
 
 pimmy.prototype.cache.prototype.install = async function(cache_path, update, silent) {
-  pimmy.prototype.logger.prototype.title("Installing from cache entry")
+  if (!silent) pimmy.prototype.logger.prototype.title("Installing from cache entry")
   let app_yaml = path.prototype.join(cache_path, 'app.yaml')
   let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
   let app_name = config.manifest.package
@@ -1983,29 +2005,48 @@ pimmy.prototype.cache.prototype.install = async function(cache_path, update, sil
       pimmy.prototype.logger.prototype.closeTitle("App installation cancelled")
       return
     }
+    pimmy.prototype.logger.prototype.log(`Installing ${app_name}`)
   }
-
-  pimmy.prototype.logger.prototype.log(`Installing ${app_name}`)
   let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app_name)
 
-  // dependency resolution goes here
+  if (config.dependencies) {
+    if (silent) {
+      for (const dep of config.dependencies) {
+        let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
+        await pimmy.prototype.cache.prototype.install(cached, true, true, true)
+      }
+    }
+    else {
+      pimmy.prototype.logger.prototype.info("Dependencies found")
+      for (const dep of config.dependencies) {
+        pimmy.prototype.logger.prototype.info(pimmy.prototype.logger.prototype.indent(2), ` ${dep}`)
+      }
+      let response = pimmy.prototype.logger.prototype.input("Allow install dependencies? (y/n)")
+      if (response.toLowerCase().startsWith('y')) {
+        for (const dep of config.dependencies) {
+          let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
+          await pimmy.prototype.cache.prototype.install(cached, true, true)
+        }
+      }
+    }
+  }
 
   if (update && exists(dest)) {
     await rm(dest, true)
   }
   await copy(cache_path, dest)
-  return pimmy.prototype.logger.prototype.closeTitle("App installed")
+  if (!silent) return pimmy.prototype.logger.prototype.closeTitle("App installed");return
 }
 
 
-pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed) {
+pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed, silent) {
   if (!isRecursed) pimmy.prototype.logger.prototype.title(`Resolve cache entry ${key}`)
   let app_path = rew.prototype.path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, key))
   if (exists(app_path)) {
     let cache_path = path.prototype.join(_cache_path, generate_id_for_existing(app_path))
     if (exists(cache_path)) rm(cache_path, true)
     await copy(app_path, cache_path)
-    pimmy.prototype.logger.prototype.closeTitle()
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
     return cache_path
   }
   else if (_url_pattern.exec(key)) {
@@ -2020,8 +2061,8 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
       url
     )
     let cache_path = path.prototype.join(_cache_path, uid)
-    pimmy.prototype.logger.prototype.info("Found URL entry")
-    pimmy.prototype.logger.prototype.verbose(`Downloading URL entry ${url} as cache entry ${uid}`)
+    if (!silent) pimmy.prototype.logger.prototype.info("Found URL entry")
+    if (!silent) pimmy.prototype.logger.prototype.verbose(`Downloading URL entry ${url} as cache entry ${uid}`)
     
     mkdir(cache_path, true)
 
@@ -2033,11 +2074,11 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
           await download_file(url, cache_file)
         }
         else {
-          pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
+          if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
         }
       }
       else {
-        pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
+        if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
       }
     }
     else await download_file(url, cache_file)
@@ -2045,7 +2086,7 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
     let unarachive_path = path.prototype.join(cache_path, "_out")
     let built_path = path.prototype.join(cache_path, "_out/.built")
     if (exists(built_path)) {
-      pimmy.prototype.logger.prototype.closeTitle("Cache resolved")
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle("Cache resolved")
       return unarachive_path
     }
     else mkdir(unarachive_path, true)
@@ -2053,8 +2094,8 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
     await unarchive(unarchiver, cache_file, unarachive_path)
     let app_yaml = path.prototype.join(unarachive_path, 'app.yaml')
     if (!exists(app_yaml)) {
-      pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
-      pimmy.prototype.logger.prototype.closeTitle()
+      if (!silent) pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
       return null
     }
     let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
@@ -2066,7 +2107,7 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
       }
     }
     await write(built_path, '')
-    pimmy.prototype.logger.prototype.closeTitle()
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
     return unarachive_path
   }
   else if (key.startsWith('github:')) {
@@ -2078,23 +2119,23 @@ pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed
     let homeUrl, branch, commit;
     ({homeUrl, branch, commit} = pimmy.prototype.utils.prototype.resolveGithubURL(key))
 
-    pimmy.prototype.logger.prototype.info("Found GIT entry")
-    pimmy.prototype.logger.prototype.log(`Cloning repo ${homeUrl} as cache entry ${uid}`)
+    if (!silent) pimmy.prototype.logger.prototype.info("Found GIT entry")
+    if (!silent) pimmy.prototype.logger.prototype.log(`Cloning repo ${homeUrl} as cache entry ${uid}`)
     
-    await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path)
-    if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path})
-    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path(
-      pimmy.prototype.logger.prototype.closeTitle(),)})
+    await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path, {stdout: "piped"})
+    if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path, stdout: "piped"})
+    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path, stdout: "piped"})
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
     return cache_path
   }
   else {
     let isInRepo = pimmy.prototype.repo.prototype.lookup(key)
     if (isInRepo) {
-      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update, true)
+      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update, true, silent)
     }
     else {
-      pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
-      pimmy.prototype.logger.prototype.closeTitle()
+      if (!silent) pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
       return null
     }
   }
@@ -2349,7 +2390,83 @@ with (globalThis) {
 }
 return globalThis.module.exports;
 }          
-}, ["app://rew.pimmy/features/git/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cli/main.coffee", {
+}, ["app://rew.pimmy/features/git/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/main.coffee", {
+"/home/makano/workspace/pimmy/features/project/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::project");
+
+function yesify(thing) {
+  if (thing) return "@cyan(yes)";
+  else return "@yellow(no)"
+}
+
+function isYes(input) {
+  return input.toLowerCase().startsWith('y')
+}
+
+function optionify(
+  logs,
+  cli_options,
+  key,
+) {
+  if (cli_options.ignore) {
+    return pimmy.prototype.logger.prototype.log(...logs, yesify(cli_options[key]))
+  }
+  else {
+    return cli_options[key] = isYes(pimmy.prototype.logger.prototype.input(...logs))
+  }
+}
+
+pimmy.prototype.project.prototype.new = function(cli_options) {
+  let new_path = path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, typeof cli_options.new == "string" ? cli_options.new : ""))
+  if (exists(new_path) && readdir(new_path).length) {
+    pimmy.prototype.logger.prototype.error("Cannot overwrite a populated directory")
+    return
+  }
+  
+  pimmy.prototype.logger.prototype.title(":icon package bold yellow", `Creating at ${cli_options.new === true ? "." : cli_options.new}`)
+  let app_name = path.prototype.basename(new_path)
+  pimmy.prototype.logger.prototype.log("@gray(package?)", `@bold,green(${app_name})`)
+
+  optionify(
+    [":icon git bold yellow", "@gray(git?)"],
+    cli_options,
+    "git"
+  )
+  
+  optionify(
+    [":icon types blue", "@gray(types?)"],
+    cli_options,
+    "types"
+  )
+  
+  pimmy.prototype.logger.prototype.closeTitle("Options set")
+
+  pimmy.prototype.logger.prototype.title("Creating files")
+
+  mkdir(new_path, true)
+  write(path.prototype.join(new_path, "app.yaml"), rew.prototype.yaml.prototype.string({manifest: {"package": app_name}, entries: {main: "main.coffee"}}))
+  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(app.yaml)")
+  
+  write(path.prototype.join(new_path, "main.coffee"), 'print "hello"')
+  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(main.coffee)")
+
+  if (cli_options.types) {
+    write(path.prototype.join(new_path, "index.d.ts"), '// coming soon')
+    pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(index.d.ts)")
+  }
+
+  if (cli_options.git) {
+    pimmy.prototype.logger.prototype.log(":icon git bold yellow", "git init")
+    shell.prototype.exec("git init .", {cwd: new_path, stdout: "piped"})
+  }
+
+  return pimmy.prototype.logger.prototype.closeTitle("Files Created")
+}
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/project/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cli/main.coffee", {
 "/home/makano/workspace/pimmy/features/cli/main.coffee"(globalThis){
 with (globalThis) {
   rew.prototype.mod.prototype.package("pimmy::cli");

@@ -32,7 +32,9 @@ package pimmy::logger;
 
 symbols = 
   info: "",
+  types: '',
   warn: "",
+  file: "",
   err: "",
   suc: "",
   question: "",
@@ -57,7 +59,13 @@ parse_log = (log) =>
   if log.startsWith '!'
     log.slice(1, -1)
   else if log.startsWith ':icon'
-    symbols[log.split(' ')[1]]
+    colors = log.split(' ')
+    colors.shift();
+    icon = symbols[colors.shift()]
+    if colors.length
+      for color of colors
+        icon = @[color.trim()] icon
+    icon
   else if log.startsWith '@'
     names = log.slice(1, -1).split('(')[0].split(',')
     all = log.split('(')[1].split(')')[0]
@@ -102,6 +110,8 @@ pimmy::logger::input = (icon, ...logs) =>
   unless logs.length
     logs = [icon]
     icon = blue(symbols.question)
+  if icon.startsWith(':icon')
+    icon = resolve_logs([icon])
   print gray(separator)
   after_prefix =  " " + icon + " " + resolve_logs(logs) + " ";
   result = input gray(endPrefix) + after_prefix
