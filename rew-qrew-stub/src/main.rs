@@ -18,6 +18,7 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
 	
     let code = String::from_utf8(script)?;
     let args = Some(std::env::args().collect());
+    // println!("{:?}", args);
     let mut runtime = RewRuntime::new(args, None).unwrap();
 
     let mut exe_vpath = exe_path.clone();

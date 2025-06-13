@@ -1,7 +1,9 @@
 manifest:
   package: rew.pimmy
+  version: 0.0.1
 entries:
-  main: main.coffee
+  main: pimmy.qrew
+  pimmy: pimmy.qrew
 crates:
   - name: rew_qrew_stub
     path: ./rew-qrew-stub
@@ -14,3 +16,16 @@ crates:
         output: .artifacts/rew-qrew
         cleanup: ./rew-qrew/target
     cleanup: ./rew-qrew-stub/target
+build:
+  - input: ./main.coffee
+    output: main.brew
+    using: brew
+    cleanup: ./main.coffee
+  - input: ./main.brew
+    output: ./pimmy.qrew
+    cleanup: ./main.brew
+    using: qrew
+install:
+  build: true
+  bin:
+    pimmy: pimmy.qrew

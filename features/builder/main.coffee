@@ -54,7 +54,11 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
       if file.id then triggers.filter .id == file.id
         .forEach .build()
       if file.cleanup and !safe_mode
-        rm path::join(app_path, file.cleanup), true
+
+        if Array.isArray(file.cleanup)
+          for cleanup of file.cleanup
+            rm path::join(app_path, cleanup), true
+        else rm path::join(app_path, file.cleanup), true
         pimmy::logger::info 'File Cleanup'
     
   pimmy::logger::closeTitle "Finished build with #{errors} errors."

@@ -20,7 +20,10 @@ function build_crate(crate, app_path, safe_mode)
 
   if crate.cleanup and !safe_mode
     pimmy::logger::info 'Clean Up', crate.name
-    rm path::join(app_path, crate.cleanup), true
+    if Array.isArray(crate.cleanup)
+      for cleanup of crate.cleanup
+        rm path::join(app_path, cleanup), true
+    else rm path::join(app_path, crate.cleanup), true
   return 1
 
 cargo::build_crates_for = (app_path, app_config, safe_mode, triggers) ->

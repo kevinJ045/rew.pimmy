@@ -1,3 +1,18 @@
+
+// entry "/home/makano/workspace/pimmy/main.coffee" 
+// external "#std"
+// external "#std.ffi"
+// external "#std.types"
+// external "#std.conf"
+// external "#std.encoding"
+// external "#std.fs"
+// external "#std.os"
+// external "#std.path"
+// external "#std.shell"
+// external "#std.threads"
+// external "#std.http"
+// external "#std.yaml"
+// external "#std.net"
 rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/main.coffee", {
 "/home/makano/workspace/pimmy/main.coffee"(globalThis){
 with (globalThis) {
@@ -36,6 +51,7 @@ using(pimmy.prototype.cli.prototype.option('ignore', {type: 'boolean', alias: 'i
 using(pimmy.prototype.cli.prototype.option('safe', {type: 'boolean', alias: 's'}))
 // misc
 using(pimmy.prototype.cli.prototype.option('verbose', {type: 'boolean', alias: 'v'}))
+using(pimmy.prototype.cli.prototype.option('version', {type: 'boolean'}))
 using(pimmy.prototype.cli.prototype.option('help', {type: 'boolean', alias: 'h'}))
 using(pimmy.prototype.cli.prototype.parse(rew.prototype.process.prototype.args));
 
@@ -44,6 +60,11 @@ pimmy.prototype.init.prototype.start();
 pimmy.prototype.repo.prototype.init();
 
 module.exports.main =  async function main() {
+
+  if (cli_options.version) {
+    return print(module.app.config.manifest.version)
+  }
+
   if (cli_options.new) {
     return pimmy.prototype.project.prototype.new(cli_options)
   }
@@ -87,7 +108,2068 @@ module.exports.main =  async function main() {
 }
 return globalThis.module.exports;
 }          
-}, ["app://rew.pimmy/main"]);(function(module){
+}, ["app://rew.pimmy/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/loader/main.coffee", {
+"/home/makano/workspace/pimmy/features/loader/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::loader");
+
+loader.prototype.frames = ['|', '/', '-', '\\']
+loader.prototype.interval = null
+loader.prototype.i = 0
+loader.prototype.text = 'Loading'
+
+loader.prototype.start = function(text) {
+  if (text) loader.prototype.text = text
+  if (loader.prototype.interval != null) { return }  // avoid duplicate intervals
+
+  return this.interval = setInterval(() => {
+    let frame = loader.prototype.frames[loader.prototype.i % loader.prototype.frames.length]
+    printf(`\r${frame} ${loader.prototype.text}`)
+    return loader.prototype.i++
+  }
+  , 100)
+}
+
+loader.prototype.say = function(newText) {
+  return loader.prototype.text = newText
+}
+
+loader.prototype.stop = function() {
+  if (!(loader.prototype.interval != null)) { return }
+  clearInterval(loader.prototype.interval)
+  loader.prototype.interval = null
+  return printf("\r")
+}
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/loader/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/logger/main.coffee", {
+"/home/makano/workspace/pimmy/features/logger/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::logger");
+
+
+this.black     = (t) => `\x1b[30m${t}\x1b[0m`
+this.red       = (t) => `\x1b[31m${t}\x1b[0m`
+this.green     = (t) => `\x1b[32m${t}\x1b[0m`
+this.yellow    = (t) => `\x1b[33m${t}\x1b[0m`
+this.blue      = (t) => `\x1b[34m${t}\x1b[0m`
+this.magenta   = (t) => `\x1b[35m${t}\x1b[0m`
+this.cyan      = (t) => `\x1b[36m${t}\x1b[0m`
+this.white     = (t) => `\x1b[37m${t}\x1b[0m`
+this.gray      = (t) => `\x1b[90m${t}\x1b[0m`
+
+this.bgRed     = (t) => `\x1b[41m${t}\x1b[0m`
+this.bgGreen   = (t) => `\x1b[42m${t}\x1b[0m`
+this.bgYellow  = (t) => `\x1b[43m${t}\x1b[0m`
+this.bgBlue    = (t) => `\x1b[44m${t}\x1b[0m`
+this.bgMagenta = (t) => `\x1b[45m${t}\x1b[0m`
+this.bgCyan    = (t) => `\x1b[46m${t}\x1b[0m`
+this.bgWhite   = (t) => `\x1b[47m${t}\x1b[0m`
+this.bgGray    = (t) => `\x1b[100m${t}\x1b[0m`
+
+this.bold      = (t) => `\x1b[1m${t}\x1b[22m`
+this.dim       = (t) => `\x1b[2m${t}\x1b[22m`
+this.italic    = (t) => `\x1b[3m${t}\x1b[23m`
+this.underline = (t) => `\x1b[4m${t}\x1b[24m`
+this.inverse   = (t) => `\x1b[7m${t}\x1b[27m`
+this.hidden    = (t) => `\x1b[8m${t}\x1b[28m`
+this.strike    = (t) => `\x1b[9m${t}\x1b[29m`
+
+this.normal    = (t) => `\x1b[0m${t}\x1b[0m`
+
+let symbols =  {
+  info: "",
+  types: '',
+  warn: "",
+  file: "",
+  err: "",
+  suc: "",
+  question: "",
+  "package": "",
+  git: "󰊢",
+  github: "",
+  download: "",
+  build: "",
+  terminal: "",
+}
+
+let startPrefix      = '╭'
+let separator        = '│'
+let middlePrefix     = '├'
+let endPrefix        = '╰'
+
+pimmy.prototype.logger.prototype.LOG = false;
+let printnorm = function(logs) {
+  print(gray(separator))
+  return print(gray(middlePrefix) + " " + logs)
+}
+
+let parse_log = (log) => {
+  if (log.startsWith('!')) {
+    return log.slice(1, -1)
+  }
+  else if (log.startsWith(':icon')) {
+    let colors = log.split(' ')
+    colors.shift();
+    let icon = symbols[colors.shift()]
+    if (colors.length) {
+      for (const color of colors) {
+        icon = this[color.trim()](icon)
+      }
+    }
+    return icon
+  }
+  else if (log.startsWith('@')) {
+    let names = log.slice(1, -1).split('(')[0].split(',')
+    let all = log.split('(')[1].split(')')[0]
+    
+    for (const name of names) {
+      all = this[name](all)
+    }
+    return all
+  }
+  else {
+    return log
+  }
+}
+
+let resolve_logs = function(logs) {
+  return logs.map(parse_log).join(' ')
+}
+
+pimmy.prototype.logger.prototype.title = (...logs) => {
+  print()
+  return print(gray(startPrefix) + " " + resolve_logs(logs))
+}
+
+pimmy.prototype.logger.prototype.closeTitle = (...logs) => {
+  print(gray(separator))
+  return print(gray(endPrefix) + " " + resolve_logs(logs))
+}
+
+pimmy.prototype.logger.prototype.subtitle = (...logs) => {
+  return print(gray(separator) + " " + resolve_logs(logs))
+}
+
+pimmy.prototype.logger.prototype.verbose = (...logs) => {
+  if (pimmy.prototype.logger.prototype.LOG) {
+    return printnorm(bold(gray(symbols.terminal)) + " " + resolve_logs(logs))
+  };return
+}
+
+pimmy.prototype.logger.prototype.log = (...logs) => {
+  return printnorm(resolve_logs(logs))
+}
+
+pimmy.prototype.logger.prototype.info = (...logs) => {
+  return printnorm(blue(symbols.info) + ' ' + resolve_logs(logs))
+}
+
+pimmy.prototype.logger.prototype.error = (...logs) => {
+  return printnorm(bgRed(' ' + black(symbols.err + ' ERROR ')) + ' ' + red(resolve_logs(logs)))
+}
+
+pimmy.prototype.logger.prototype.warn = (...logs) => {
+  return printnorm(bgYellow(' ' + black(symbols.warn + ' WARN ')) + ' ' + yellow(resolve_logs(logs)))
+}
+
+pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
+  if (!logs.length) {
+    logs = [icon]
+    icon = blue(symbols.question)
+  }
+  if (icon.startsWith(':icon')) {
+    icon = resolve_logs([icon])
+  }
+  print(gray(separator))
+  let after_prefix =  " " + icon + " " + resolve_logs(logs) + " ";
+  let result = input(gray(endPrefix) + after_prefix)
+  print("\x1b[1A\r" + gray(middlePrefix) + after_prefix)
+  return result
+}
+
+
+let loader_frames = [
+  '⠋',
+  '⠙',
+  '⠸',
+  '⠴',
+  '⠦',
+  '⠇'
+]
+let loader_interval = null
+let loader_i = 0
+let loader_text = 'Loading'
+
+let _loader_frames = () => {
+  let frame = loader_frames[loader_i % loader_frames.length]
+  printf(`\r${gray(endPrefix)} ${pickRandom(cyan, red, blue, yellow, magenta)(frame)} ${loader_text}`)
+  return loader_i++
+}
+
+let loader_start = function(text) {
+  print(gray(separator))
+  if (text) loader_text = text
+  if (loader_interval != null) { return }
+
+  return loader_interval = setInterval(_loader_frames, 100)
+}
+
+let loader_say = function(newText) {
+  return loader_text = newText
+}
+
+let loader_stop = function() {
+  if (!(loader_interval != null)) { return }
+  clearInterval(loader_interval)
+  loader_interval = null
+  return printf("\x1b[1A\r")
+}
+
+pimmy.prototype.logger.prototype.loading = loader_start 
+pimmy.prototype.logger.prototype.setLoadeg = loader_say
+pimmy.prototype.logger.prototype.stopLoading = loader_stop
+
+pimmy.prototype.logger.prototype.indent = function(x = 1) { return `\r${gray(middlePrefix+'─'.repeat(x))}` }
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/logger/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/utils/main.coffee", {
+"/home/makano/workspace/pimmy/features/utils/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::utils");
+rew.prototype.mod.prototype.find(module, "#std.fs");
+rew.prototype.mod.prototype.find(module, "#std.yaml");
+
+pimmy.prototype.utils.prototype.readYaml = function(path) {
+  return rew.prototype.yaml.prototype.parse(read(path))
+}
+
+pimmy.prototype.utils.prototype.resolveGithubURL = function(github_url) {
+  let match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
+  if (!match) {
+    pimmy.prototype.logger.prototype.error(`Invalid GitHub URL: ${github_url}`)
+    return null
+  }
+
+  let owner, repoName, branch, commit;
+
+  [, owner, repoName, branch, commit] = match
+  branch = branch ?? "main"
+
+  let baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
+  let homeUrl = `https://github.com/${owner}/${repoName}`
+  return ({baseUrl, homeUrl, owner, repoName, branch, commit})
+}
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/utils/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/init/main.coffee", {
+"/home/makano/workspace/pimmy/features/init/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::init");
+
+rew.prototype.mod.prototype.find(module, "#std!");
+rew.prototype.mod.prototype.find(module, "#std.fs");
+rew.prototype.mod.prototype.find(module, "#std.path");
+
+pimmy.prototype.init.prototype.ROOT = rew.prototype.env.prototype.get('REW_ROOT');
+
+pimmy.prototype.init.prototype._check_init = function() {
+  try {
+    let config = rew.prototype.conf.prototype.readAuto("init.yaml")
+    return config._init
+  }
+  catch {
+    return false
+  }
+}
+
+pimmy.prototype.init.prototype._set_init = function() {
+  return rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: true })
+}
+
+pimmy.prototype.init.prototype._copy_apps = async function() {
+  let apps = rew.prototype.fs.prototype.readdir('./apps')
+  const results=[];for (const app of apps) {
+    let app_path = rew.prototype.path.prototype.normalize(app.path)
+    let dest = rew.prototype.path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app.name)
+    results.push(await rew.prototype.fs.prototype.copy(app.path, dest))
+  };return results;
+}
+
+pimmy.prototype.init.prototype.start = function() {
+  if (pimmy.prototype.init.prototype._check_init()) return
+  pimmy.prototype.init.prototype._copy_apps()
+  pimmy.prototype.init.prototype._set_init()
+  return pimmy.prototype.repo.prototype.init()
+}
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/init/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/main.coffee", {
+"/home/makano/workspace/pimmy/features/builder/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::builder");
+rew.prototype.mod.prototype.find(module, "./cargo.coffee");
+rew.prototype.mod.prototype.find(module, "./brew.coffee");
+using(namespace(pimmy.prototype.builder.prototype.cargo));
+
+pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe_mode) {
+  let ref;if (path.prototype.isAbsolute(app_path_relative)) ref = app_path_relative; else ref = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(rew.prototype.process.prototype.cwd, app_path_relative));let app_path = ref
+  let app_conf_path = rew.prototype.path.prototype.join(app_path, 'app.yaml')
+
+  if (!rew.prototype.fs.prototype.exists(app_conf_path)) throw new Error('App not found');
+  
+  let config = pimmy.prototype.utils.prototype.readYaml(app_conf_path)
+  pimmy.prototype.logger.prototype.title('Building App', config.manifest.package)
+  
+  if (!(config.crates || config.build)) throw new Error('no build candidates found');
+  
+  if (config.cakes) {
+    pimmy.prototype.logger.prototype.log('Found Cakes ')
+    for (const cakefile of config.cakes) {
+      try {
+        let cake = await imp(rew.prototype.path.prototype.join(app_path, cakefile))
+        if (cake?.builders) {
+          for (const key in cake.builders) {
+            pimmy.prototype.builder.prototype[key] = cake.builders[key]
+          }
+        }
+        else {
+          pimmy.prototype.logger.prototype.warn('Cake did not export any builders')
+        }
+      }
+      catch(e) {
+        pimmy.prototype.logger.prototype.log('Failed to load cake')
+      }
+    }
+  }
+
+
+  let triggers = [];
+
+  let errors = 0
+
+  if (config.crates) {
+    if (!cargo.prototype.build_crates_for(app_path, config, safe_mode, triggers)) {
+      errors += 1
+    }
+  }
+  
+  if (config.build) {
+    for (const file of config.build) {
+      if (file.using) { 
+        let build_fn = pimmy.prototype.builder.prototype[file.using]
+        if (!build_fn) {
+          pimmy.prototype.logger.prototype.error(`Builder ${file.using} does not exist`)
+          errors++
+          break
+        }
+        let input_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.input))
+        let output_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.output))
+        if (!exists(input_path)) {
+          pimmy.prototype.logger.prototype.error(`Input file ${input_path} not found`)
+          errors++
+          break
+        }
+        await build_fn(app_path, config, file, input_path, output_path)
+      }
+      if (file.id) triggers.filter($ => $.id == file.id)
+        .forEach($1 => $1.build())
+      if (file.cleanup && !safe_mode) {
+        rm(path.prototype.join(app_path, file.cleanup), true)
+        pimmy.prototype.logger.prototype.info('File Cleanup')
+      }
+    }
+  }
+    
+  return pimmy.prototype.logger.prototype.closeTitle(`Finished build with ${errors} errors.`)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/builder/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/cargo.coffee", {
+"/home/makano/workspace/pimmy/features/builder/cargo.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::builder::cargo");
+
+function build_crate(crate, app_path, safe_mode) {
+  let crate_path = path.prototype.normalize(path.prototype.join(app_path, crate.path))
+  pimmy.prototype.logger.prototype.info(' Building crate', crate.name)
+  let result = shell.prototype.exec("cargo build --release", {cwd: crate_path, stdout: 'piped'})
+  if (!crate.build) return 1;
+  if (!result.success) {
+    pimmy.prototype.loader.prototype.stop()
+    pimmy.prototype.logger.prototype.error('Failed to build cargo')
+    print(rew.prototype.encoding.prototype.bytesToString(result.stderr))
+    pimmy.prototype.logger.prototype.error('Cargo build failed')
+    return 0
+  }
+  printf('\x1b[1A\r')
+  pimmy.prototype.logger.prototype.info('Built Crate ', crate.name)
+  if (crate.files) {
+    for (const file of crate.files) {
+      copy(path.prototype.join(app_path, file.input), path.prototype.join(app_path, file.output))
+      if (file.cleanup) rm(path.prototype.join(app_path, file.cleanup), true)
+    }
+  }
+
+  if (crate.cleanup && !safe_mode) {
+    pimmy.prototype.logger.prototype.info('Clean Up', crate.name)
+    rm(path.prototype.join(app_path, crate.cleanup), true)
+  }
+  return 1
+}
+
+cargo.prototype.build_crates_for = function(app_path, app_config, safe_mode, triggers) {
+  pimmy.prototype.logger.prototype.log(" Building app crates for", app_config.manifest.package);
+  
+  for (const crate of app_config.crates) {
+    if (crate.trigger) {
+      triggers.push({ id: crate.trigger, build: () => build_crate(crate, app_path, safe_mode) })
+    }
+    else if (!build_crate(crate, app_path, safe_mode)) {
+      return 0
+    }
+  }
+  return 1
+}
+
+
+
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/builder/cargo"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/brew.coffee", {
+"/home/makano/workspace/pimmy/features/builder/brew.coffee"(globalThis){
+with (globalThis) {
+  
+pimmy.prototype.builder.prototype.brew = function(app_path, config, file) {
+  return shell.prototype.exec(`rew brew ${file.input} ${file.output}`, {cwd: app_path})
+}
+
+pimmy.prototype.builder.prototype.qrew = function(app_path, config, file) {
+  return shell.prototype.exec(`${path.prototype.resolve("./.artifacts/rew-qrew")} ${file.input} ${file.output}`, {cwd: app_path})
+}
+  
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/builder/brew"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cache/main.coffee", {
+"/home/makano/workspace/pimmy/features/cache/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::cache");
+
+let _cache_path = path.prototype.join(conf.prototype.path(), 'cache/app-cache')
+let _url_pattern = /^file\+([a-zA-Z0-9.]+)(?:\+sha\(([a-fA-F0-9]+)\))?\+(.+)$/;
+
+function renderProgress(downloaded, total) {
+  const percent = total ? downloaded / total : 0;
+  const barLength = 20;
+  const filled = Math.round(barLength * percent);
+  const bar = "=".repeat(filled) + "-".repeat(barLength - filled);
+  const display = total
+    ? `${(percent * 100).toFixed(1)}%`
+    : `${(downloaded / 1024).toFixed(1)} KB`;
+  printf(`\r Downloading [${bar}] ${display}`);
+}
+
+function generate_id_for_existing(app_path) {
+  let yml = pimmy.prototype.utils.prototype.readYaml(path.prototype.join(app_path, 'app.yaml'))
+  return genUid(
+    14,
+    yml.manifest.package + (yml.manifest.version || "")
+  ) + yml.manifest.package
+}
+
+function parse_url_pattern(input) {
+  let match = input.match(_url_pattern);
+  if (!match) throw new Error("Invalid input format");
+
+  let unarchiver, sha, url;
+
+  [, unarchiver, sha, url] = match;
+  return {
+    url,
+    unarchiver,
+    sha: sha || undefined,
+  }
+}
+
+let unarchivers = null
+async function unarchive(unarchiver, input, output) {
+  pimmy.prototype.logger.prototype.verbose("Preparing extractors(REW_FFI_LOAD)")
+  let symbolMap = instantiate(class {
+    zip_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_gz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_xz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_bz2_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    tar_zst_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    rar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+    sevenz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
+  })
+
+  if (!unarchivers) unarchivers = ffi.prototype.open(rew.prototype.path.prototype.resolve("../../.artifacts/libarchiveman.so"), symbolMap)
+
+  return await unarchivers[unarchiver + '_unarchive'](rew.prototype.ptr.prototype.of(
+    rew.prototype.encoding.prototype.stringToBytes(input)
+  ), rew.prototype.ptr.prototype.of(
+    rew.prototype.encoding.prototype.stringToBytes(output)
+  ))
+}
+
+async function download_file(url, cache_file) {
+  let res = await net.prototype.fetch(url)
+  const total = Number(res.headers.get("content-length")) || 0
+  let downloaded = 0
+
+
+  let file = await open(cache_file, {
+    write: true,
+    create: true,
+    truncate: true,
+  })
+  
+  let reader = res.body.getReader()
+  let writer = file.writable.getWriter()
+
+  while (true) {
+    let done, value;
+    ({ done, value } = await reader.read())
+    if (done) break
+    await writer.write(value)
+    downloaded = downloaded + value.length
+    renderProgress(downloaded, total)
+  }
+  
+  printf("\r\n")
+  return file.close()
+}
+
+async function build_path(path) {
+  return await pimmy.prototype.builder.prototype.build(path)
+}
+
+pimmy.prototype.cache.prototype.install = async function(cache_path, update, silent) {
+  if (!silent) pimmy.prototype.logger.prototype.title("Installing from cache entry")
+  let app_yaml = path.prototype.join(cache_path, 'app.yaml')
+  let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+  let app_name = config.manifest.package
+
+  if (config.install?.preinstall) {
+    for (const script of config.install.preinstall) {
+      try {
+        await imp(rew.prototype.path.prototype.join(cache_path, script))
+      }
+      catch(e) {
+        pimmy.prototype.logger.prototype.log('Failed to load preinstall script')
+      }
+    }
+  }
+
+
+  if (!silent) {
+    pimmy.prototype.logger.prototype.log(":icon package", `Package Info for ${app_name}`);
+    pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "@gray(version)", `${config.manifest.version || "unknown"}`);
+    if (config.manifest.github) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon github", "github", `${config.manifest.github}`);
+    }
+    if (config.manifest.description) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon info", "description", `${config.manifest.description}`);
+    }
+    if (config.manifest.tags) {
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "tags:")
+      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(2), `!${config.manifest.tags.join(' ')}!`);
+    }
+    let response = pimmy.prototype.logger.prototype.input("Proceed to install? (y/n)")
+    if (!response.toLowerCase().startsWith('y')) {
+      pimmy.prototype.logger.prototype.closeTitle("App installation cancelled")
+      return
+    }
+    pimmy.prototype.logger.prototype.log(`Installing ${app_name}`)
+  }
+  let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app_name)
+
+  if (config.dependencies) {
+    if (silent) {
+      for (const dep of config.dependencies) {
+        let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
+        await pimmy.prototype.cache.prototype.install(cached, true, true, true)
+      }
+    }
+    else {
+      pimmy.prototype.logger.prototype.info("Dependencies found")
+      for (const dep of config.dependencies) {
+        pimmy.prototype.logger.prototype.info(pimmy.prototype.logger.prototype.indent(2), ` ${dep}`)
+      }
+      let response = pimmy.prototype.logger.prototype.input("Allow install dependencies? (y/n)")
+      if (response.toLowerCase().startsWith('y')) {
+        for (const dep of config.dependencies) {
+          let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
+          await pimmy.prototype.cache.prototype.install(cached, true, true)
+        }
+      }
+    }
+  }
+
+  if (update && exists(dest)) {
+    await rm(dest, true)
+  }
+  await copy(cache_path, dest)
+
+
+  if (config.install?.bin) {
+    pimmy.prototype.logger.prototype.info(`App has binaries to register, remember to add ${path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'bin')} to your PATH`)
+    let ref;for (const bin in ref = config.install?.bin) {const file = ref[bin];
+      let bin_path = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'bin', bin)
+      let realpath = path.prototype.join(dest, file)
+      pimmy.prototype.logger.prototype.info(`Registering ${bin}`)
+      if (rew.prototype.os.prototype.slug == "windows") {
+        await write(bin_path+".cmd", `rew run ${config.manifest.package} -e ${bin} -- %*`)
+      }
+      else {
+        shell.prototype.exec(`ln -s ${realpath} ${bin_path}`)
+      }
+    }
+  }
+
+  if (config.install?.postinstall) {
+    for (const script of config.install.postinstall) {
+      try {
+        await imp(rew.prototype.path.prototype.join(cache_path, script))
+      }
+      catch(e) {
+        pimmy.prototype.logger.prototype.log('Failed to load postinstall script')
+      }
+    }
+  }
+
+  if (!silent) return pimmy.prototype.logger.prototype.closeTitle("App installed");return
+}
+
+
+pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed, silent) {
+  if (!isRecursed) pimmy.prototype.logger.prototype.title(`Resolve cache entry ${key}`)
+  let app_path = rew.prototype.path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, key))
+  if (exists(app_path)) {
+    let cache_path = path.prototype.join(_cache_path, generate_id_for_existing(app_path))
+    if (exists(cache_path)) rm(cache_path, true)
+    await copy(app_path, cache_path)
+    let app_yaml = path.prototype.join(cache_path, 'app.yaml')
+    if (!exists(app_yaml)) {
+      if (!silent) pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+      return null
+    }
+    let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+    // if config.install?.build then await build_path(cache_path)
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+    return cache_path
+  }
+  else if (_url_pattern.exec(key)) {
+    let url, unarchiver, sha;
+    ({
+      url,
+      unarchiver,
+      sha
+    } = parse_url_pattern(key))
+    let uid = genUid(
+      24,
+      url
+    )
+    let cache_path = path.prototype.join(_cache_path, uid)
+    if (!silent) pimmy.prototype.logger.prototype.info("Found URL entry")
+    if (!silent) pimmy.prototype.logger.prototype.verbose(`Downloading URL entry ${url} as cache entry ${uid}`)
+    
+    mkdir(cache_path, true)
+
+    let cache_file = path.prototype.join(cache_path, `entry.${unarchiver.replaceAll("_", ".")}`)
+
+    if (!update && exists(cache_file)) {
+      if (sha) {
+        if (rew.prototype.fs.prototype.sha(cache_file) != sha) {
+          await download_file(url, cache_file)
+        }
+        else {
+          if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
+        }
+      }
+      else {
+        if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
+      }
+    }
+    else await download_file(url, cache_file)
+
+    let unarachive_path = path.prototype.join(cache_path, "_out")
+    let built_path = path.prototype.join(cache_path, "_out/.built")
+    if (exists(built_path)) {
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle("Cache resolved")
+      return unarachive_path
+    }
+    else mkdir(unarachive_path, true)
+
+    await unarchive(unarchiver, cache_file, unarachive_path)
+    let app_yaml = path.prototype.join(unarachive_path, 'app.yaml')
+    if (!exists(app_yaml)) {
+      if (!silent) pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+      return null
+    }
+    let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
+    if (config.install?.build) await build_path(unarachive_path)
+    if (config.install?.cleanup) {
+      for (const item of config.install.cleanup) {
+        let item_path = path.prototype.join(unarachive_path, item)
+        if (exists(item_path)) rm(item_path, true)
+      }
+    }
+    await write(built_path, '')
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+    return unarachive_path
+  }
+  else if (key.startsWith('github:')) {
+    let uid = genUid(
+      24,
+      key
+    )
+    let cache_path = path.prototype.join(_cache_path, uid)
+    let homeUrl, branch, commit;
+    ({homeUrl, branch, commit} = pimmy.prototype.utils.prototype.resolveGithubURL(key))
+
+    if (!silent) pimmy.prototype.logger.prototype.info("Found GIT entry")
+    if (!silent) pimmy.prototype.logger.prototype.log(`Cloning repo ${homeUrl} as cache entry ${uid}`)
+    
+    await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path, {stdout: "piped"})
+    if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path, stdout: "piped"})
+    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path, stdout: "piped"})
+    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+    return cache_path
+  }
+  else {
+    let isInRepo = pimmy.prototype.repo.prototype.lookup(key)
+    if (isInRepo) {
+      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update, true, silent)
+    }
+    else {
+      if (!silent) pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
+      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
+      return null
+    }
+  }
+}
+  
+    
+
+
+
+
+
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/cache/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/repo/main.coffee", {
+"/home/makano/workspace/pimmy/features/repo/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::repo");
+
+
+rew.prototype.mod.prototype.find(module, "#std.net");
+
+// c = rew::channel::new ->
+
+async function _fetchFile(url) {
+  return await rew.prototype.net.prototype.fetch(url)
+        .then($ => $.text())
+        .catch(function() { return null })
+}
+
+repo.prototype.lookup = function(pkgname) {
+  var results, index, parts, repo_name, real_name, path, data;
+  results = []
+  index = 0 
+
+  // Parse names like "@repo/package"
+  if (pkgname.startsWith("@")) {
+    parts = pkgname.slice(1).split('/')
+    if (parts.length != 2) {
+      pimmy.prototype.logger.prototype.error(`Invalid qualified package: ${pkgname}`)
+      return null
+    };
+
+    [repo_name, real_name] = parts
+  }
+  else {
+    repo_name = null
+    real_name = pkgname
+  }
+
+  while (true) {
+    path = `cache/repo-cache/db_${index}.bin`
+    try {
+      data = JSON.parse(rew.prototype.encoding.prototype.bytesToString(rew.prototype.conf.prototype.readAuto(path)))
+    }
+    catch {
+      break
+    }
+
+    for (const pkg of data) {
+      if (repo_name && pkg.repo == repo_name && pkg.name == real_name) {
+        return pkg
+      }
+      if (!repo_name && pkg.name == real_name) {
+        results.push(pkg)
+      }
+    }
+
+    index += 1
+  }
+
+  if (results.length > 0) {
+    return results[0]
+  }  
+  else {
+    pimmy.prototype.logger.prototype.warn(`Package not found: ${pkgname}`)
+    return null
+  }
+}
+
+
+
+async function _resolveGithub(name, github_url) {
+  var baseUrl, pkg, files, app_content, app, icon_path, readme;
+  ({ baseUrl } = pimmy.prototype.utils.prototype.resolveGithubURL(github_url))
+
+  pkg = {
+    name: name,
+    url: github_url, 
+  }
+
+  files = ['app.yaml']
+
+  app_content = await _fetchFile(baseUrl + "app.yaml")
+  
+  app = rew.prototype.yaml.prototype.parse(app_content)
+  if (app?.assets?.icon) {
+    icon_path = app.assets.icon
+    pkg.icon = baseUrl + icon_path
+  }
+  if (app?.manifest?.readme) {
+    readme = await _fetchFile(baseUrl + app?.manifest?.readme)
+    pkg.readme = readme
+  }
+  if (app?.manifest?.tags) {
+    pkg.tags = app?.manifest?.tags ?? []
+  }
+  if (app?.manifest?.description) {
+    pkg.description = app.manifest.description
+  }
+
+  return pkg
+}
+
+async function _parseRepo(name, repo_url, seen = {}, result = []) {
+  var data, repo, pkg;
+  if (seen[repo_url]) return
+  seen[repo_url] = true
+
+  data = await rew.prototype.net.prototype.fetch("https:" + repo_url)
+           .then($1 => $1.text())
+           .catch(function() { return null })
+
+  if (!data) {
+    pimmy.prototype.logger.prototype.error(`Failed to fetch repo: ${repo_url}`)
+    return
+  }
+
+  repo = rew.prototype.yaml.prototype.parse(data)
+
+  // Recursively import other YAMLs
+  for (const imported of repo.imports ?? []) {
+    await _parseRepo(name, imported, seen, result)
+  }
+
+  // Resolve packages
+  let ref;for (const pkgname in ref = repo.packages) {const value = ref[pkgname];
+    if (typeof value == 'string' && value.startsWith("github:")) {
+      pkg = await _resolveGithub(pkgname, value)
+      if (pkg) pkg.repo = name
+      if (pkg) result.push(pkg)
+    }
+    else {
+      if (value.readme) value.readme = await _fetchFile(value.readme)
+      result.push({ name: pkgname, repo: name, ...value })
+    }
+  }
+
+  return result
+}
+
+repo.prototype.sync_all = async function(repo_name) {
+  var repos, index, data, path;
+  repos = conf.prototype.readYAML("repo/main.yaml")
+
+  index = 0
+  
+  pimmy.prototype.loader.prototype.start("Downloading")
+  for (const name in repos) {const url = repos[name];
+    if (typeof repo_name == "string" && name !== repo_name) continue; 
+    data = await _parseRepo(name, url)
+    if (data) {
+      path = `cache/repo-cache/db_${index}.bin`
+      rew.prototype.conf.prototype.writeAuto(path, data)
+      index += 1
+    }
+  }
+  return pimmy.prototype.loader.prototype.stop()
+}
+
+pub(repo.prototype._check_init = function() {
+  var config;
+  try {
+    config = rew.prototype.conf.prototype.readAuto("init.yaml")
+    return config
+  }
+  catch {
+    return false
+  }
+})
+
+repo.prototype.init = function() {
+  var init_file, pimmy_data_path;
+  init_file = repo.prototype._check_init()
+  if (init_file?._repo) return
+  pimmy_data_path = conf.prototype.path()
+  mkdir(path.prototype.join(pimmy_data_path, 'cache'))
+  mkdir(path.prototype.join(pimmy_data_path, 'cache/app-cache'))
+  mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))
+  mkdir(path.prototype.join(pimmy_data_path, 'repo'))
+
+  conf.prototype.writeYAML('repo/main.yaml', {
+    rewpkgs: "//raw.githubusercontent.com/kevinJ045/rewpkgs/main/main.yaml"
+  })
+
+  return rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: init_file._init ?? false, _repo: true })
+}
+
+
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/repo/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/git/main.coffee", {
+"/home/makano/workspace/pimmy/features/git/main.coffee"(globalThis){
+with (globalThis) {
+  
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/git/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/main.coffee", {
+"/home/makano/workspace/pimmy/features/project/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::project");
+const civet_options = rew.prototype.mod.prototype.find(module,  "./civet.txt");
+const main_types = rew.prototype.mod.prototype.find(module,  "./types.txt");
+
+function yesify(thing) {
+  if (thing) return "@cyan(yes)";
+  else return "@yellow(no)"
+}
+
+function isYes(input) {
+  return input.toLowerCase().startsWith('y')
+}
+
+function optionify(
+  logs,
+  cli_options,
+  key,
+) {
+  if (cli_options.ignore) {
+    return pimmy.prototype.logger.prototype.log(...logs, yesify(cli_options[key]))
+  }
+  else {
+    return cli_options[key] = isYes(pimmy.prototype.logger.prototype.input(...logs))
+  }
+}
+
+pimmy.prototype.project.prototype.new = function(cli_options) {
+  let new_path = path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, typeof cli_options.new == "string" ? cli_options.new : ""))
+  if (exists(new_path) && readdir(new_path).length) {
+    pimmy.prototype.logger.prototype.error("Cannot overwrite a populated directory")
+    return
+  }
+  
+  pimmy.prototype.logger.prototype.title(":icon package bold yellow", `Creating at ${cli_options.new === true ? "." : cli_options.new}`)
+  let app_name = path.prototype.basename(new_path)
+  pimmy.prototype.logger.prototype.log("@gray(package?)", `@bold,green(${app_name})`)
+
+  optionify(
+    [":icon git bold yellow", "@gray(git?)"],
+    cli_options,
+    "git"
+  )
+  
+  optionify(
+    [":icon types blue", "@gray(types?)"],
+    cli_options,
+    "types"
+  )
+  
+  pimmy.prototype.logger.prototype.closeTitle("Options set")
+
+  pimmy.prototype.logger.prototype.title("Creating files")
+
+  mkdir(new_path, true)
+  write(path.prototype.join(new_path, "app.yaml"), rew.prototype.yaml.prototype.string({manifest: {"package": app_name}, entries: {main: "main.coffee"}}))
+  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(app.yaml)")
+  
+  write(path.prototype.join(new_path, (cli_options.types? ("main.civet") : ("main.coffee"))), 'print "hello"')
+  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(main.coffee)")
+
+  if (cli_options.types) {
+    mkdir(path.prototype.join(new_path, "_types"), true)
+    write(path.prototype.join(new_path, "index.d.ts"), main_types)
+    write(path.prototype.join(new_path, "civet.config.json"), civet_options)
+    pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(index.d.ts)")
+    pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(civet.config.json)")
+  }
+
+  if (cli_options.git) {
+    pimmy.prototype.logger.prototype.log(":icon git bold yellow", "git init")
+    shell.prototype.exec("git init .", {cwd: new_path, stdout: "piped"})
+  }
+
+  return pimmy.prototype.logger.prototype.closeTitle("Files Created")
+}
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/project/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/civet.txt", function(globalThis){
+  return rew.prototype.mod.prototype.preprocess("/home/makano/workspace/pimmy/features/project/civet.txt", `{
+  "parseOptions": {
+    "coffeePrototype": true,
+    "autoLet": true,
+    "coffeeInterpolation": true,
+    "coffeeComment": true
+  }
+}`);
+}, ["app://rew.pimmy/features/project/civet"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/types.txt", function(globalThis){
+  return rew.prototype.mod.prototype.preprocess("/home/makano/workspace/pimmy/features/project/types.txt", `// rew-global.d.ts
+
+declare namespace Rew {
+  interface ChannelContext {
+    stop(): ChannelContext;
+    start(): ChannelContext;
+    setpoll(cb: () => void): ChannelContext;
+  }
+
+  interface Usage {
+    name: string;
+    system: (ctx: any, ...args: any[]) => void;
+    args?: any[];
+  }
+
+  interface SubPackage {
+    define(name: string, value: any): void;
+    prototype?: Record<string, any>;
+    packageName?: string;
+    name?: string;
+  }
+
+  interface Namespace {
+    name: string;
+    system: (ctx: any, ...args: any[]) => void;
+    namespace: any;
+  }
+
+  interface Private {
+    child: any;
+    args: any[];
+  }
+
+  interface Public {
+    child: any;
+    args: any[];
+  }
+
+  interface Mod {
+    name: string;
+    id?: string;
+  }
+
+  interface Ptr<T = any> {
+    id: string;
+    type?: string;
+    inner: T;
+  }
+
+  interface Ops {
+    op_dyn_imp(caller: string, path: string): Promise<[string, string]>;
+    op_gen_uid(length: number, seed?: string): string;
+    op_rand_from(min: number, max: number, seed?: string): number;
+  }
+
+  interface RewGlobal {
+    __rew_symbols(): string;
+  }
+
+  interface EnvSystem {
+    env: Record<string, string>;
+    get(key: string): string | undefined;
+    set(key: string, value: string): this;
+    delete(key: string): this;
+    has(key: string): boolean;
+    keys(): string[];
+  }
+
+  interface RewFS {
+
+    open(path: string, options?: any): any;
+
+    read(path: string, options?: { binary?: boolean }): Promise<string | Uint8Array>;
+    write(
+      path: string,
+      content: string | number[] | Uint8Array,
+      options?: { binary?: boolean; create_dirs?: boolean }
+    ): Promise<void>;
+
+    readBinary(path: string): Promise<Uint8Array>;
+    writeBinary(path: string, data: Uint8Array): Promise<void>;
+
+    stringToBytes(str: string): Uint8Array;
+    bytesToString(bytes: Uint8Array): string;
+
+    sha(path: string): string;
+
+    exists(path: string): boolean;
+
+    rm(path: string, recursive?: boolean): Promise<void>;
+    rmrf(path: string): Promise<void>;
+
+    mkdir(path: string, recursive?: boolean): Promise<void>;
+    ensureDir(path: string): Promise<void>;
+
+    stats(path: string): RewFSStats;
+
+    readdir(
+      path: string,
+      options?: {
+        include_hidden?: boolean;
+        filter_type?: 'file' | 'dir' | null;
+        sort_by?: 'name' | 'date' | null;
+      }
+    ): RewFSEntry[];
+
+    copy(
+      src: string,
+      dest: string,
+      options?: {
+        recursive?: boolean;
+        create_dirs?: boolean;
+        overwrite?: boolean;
+      }
+    ): Promise<void>;
+
+    rename(src: string, dest: string): Promise<void>;
+
+    isDirectory(path: string): boolean;
+    isFile(path: string): boolean;
+  }
+
+  interface RewFSStats {
+    isFile: boolean;
+    isDirectory: boolean;
+    isSymlink: boolean;
+    size: number;
+    modified?: number;
+    created?: number;
+    accessed?: number;
+    permissions: {
+      readonly: boolean;
+      mode?: number;
+    };
+  }
+
+  interface RewFSEntry {
+    name: string;
+    path: string;
+    isFile: boolean;
+    isDirectory: boolean;
+    isSymlink: boolean;
+  }
+
+  interface RewConf {
+    read(key: string): string;
+    write(key: string, content: string | object): Promise<void>;
+    delete(key: string): Promise<void>;
+    exists(key: string): boolean;
+
+    path(): string;
+
+    list(prefix?: string): string[];
+
+    readJSON<T = any>(key: string): T;
+    writeJSON(key: string, data: object): Promise<void>;
+
+    readYAML<T = any>(key: string): T;
+    writeYAML(key: string, data: object): Promise<void>;
+
+    readBinary(key: string): Uint8Array;
+    writeBinary(key: string, data: Uint8Array | number[]): Promise<void>;
+
+    readAuto<T = any>(key: string): T | Uint8Array | string;
+    writeAuto(key: string, data: any): Promise<void>;
+
+    getInfo(key: string): {
+      exists: boolean;
+      format: "json" | "yaml" | "binary" | "text";
+    };
+
+    current_app: {
+      config: {
+        manifest?: {
+          package?: string;
+        };
+      };
+      path: string;
+    };
+  }
+
+  type FFIPrimitiveType =
+    | "void"
+    | "pointer"
+    | "buffer"
+    | "u8"
+    | "u16"
+    | "u32"
+    | "u64"
+    | "i8"
+    | "i16"
+    | "i32"
+    | "i64"
+    | "f32"
+    | "f64";
+
+  interface FFIStruct {
+    struct: Record<string, FFIPrimitiveType>;
+  }
+
+  type FFIType = FFIPrimitiveType | FFIStruct;
+
+  interface FFITypeDef {
+    pre?: (result: any) => any;
+    parameters: FFIType[];
+    result: FFIType;
+  }
+
+  interface RewFFI {
+    _namespace(): string;
+
+    cwd(): void;
+
+    pre(...types: FFIType[]): () => FFIType[];
+
+    typed(...typesAndFn: [...FFIType[], () => FFIType | [FFIType, (result: any) => any]]): FFITypeDef | undefined;
+
+    void: "void";
+    ptr: "pointer";
+    buffer: "buffer";
+    u8: "u8";
+    u16: "u16";
+    u32: "u32";
+    u64: "u64";
+    i8: "i8";
+    i16: "i16";
+    i32: "i32";
+    i64: "i64";
+    f32: "f32";
+    f64: "f64";
+
+    struct(def: Record<string, FFIPrimitiveType>): FFIStruct;
+
+    open_raw<T = unknown>(libPath: string, symbols: Record<string, any>): T;
+
+    open<T = Record<string, (...args: any[]) => any>>(libPath: string, instance: Record<string, FFITypeDef>): T;
+
+    autoload<T = Record<string, any>>(libPath: string): T;
+  }
+
+  type ServeOptions = TcpOptions | UnixOptions;
+
+  interface TcpOptions {
+    port: number;
+    hostname?: string;
+    onListen?: (params: { port: number; hostname: string }) => void;
+    signal?: AbortSignal;
+    reusePort?: boolean;
+    reuseAddr?: boolean;
+    cert?: string;
+    key?: string;
+    alpnProtocols?: string[];
+  }
+
+  interface UnixOptions {
+    path: string;
+    onListen?: (params: { path: string }) => void;
+    signal?: AbortSignal;
+    reusePort?: boolean;
+    reuseAddr?: boolean;
+    cert?: string;
+    key?: string;
+    alpnProtocols?: string[];
+  }
+
+  interface Handler {
+    (request: Request): Response | Promise<Response>;
+  }
+
+  interface HttpConnection {
+    [key: string]: any
+  }
+
+  function serve(options: ServeOptions, handler: Handler): ServerInstance;
+  function serveHttp(conn: ConnLike): HttpConnection;
+  function upgradeWebSocket(request: Request): {
+    response: Response;
+    socket: WebSocket;
+  };
+
+  interface ConnLike {
+    readonly rid: number;
+    close(): void;
+    readable: ReadableStream<Uint8Array>;
+    writable: WritableStream<Uint8Array>;
+  }
+
+  interface ServerInstance {
+    finished: Promise<void>;
+    shutdown(): Promise<void>;
+  }
+
+  class Request {
+    constructor(input: string | URL | Request, init?: RequestInit);
+    readonly method: string;
+    readonly url: string;
+    readonly headers: Headers;
+    readonly body: ReadableStream<Uint8Array> | null;
+    clone(): Request;
+  }
+
+  // Base Response class
+  class Response {
+    constructor(body?: BodyInit | null, init?: ResponseInit);
+    static json(data: unknown, init?: ResponseInit): Response;
+  }
+
+  // Headers polyfill
+  class Headers {
+    constructor(init?: HeadersInit);
+    append(name: string, value: string): void;
+    delete(name: string): void;
+    get(name: string): string | null;
+    has(name: string): boolean;
+    set(name: string, value: string): void;
+    forEach(callback: (value: string, name: string) => void): void;
+  }
+
+  // Type aliases
+  type HeadersInit = Headers | Record<string, string> | [string, string][];
+  type BodyInit =
+    | ReadableStream<Uint8Array>
+    | ArrayBuffer
+    | Blob
+    | string
+    | FormData
+    | URLSearchParams;
+
+  interface RequestInit {
+    method?: string;
+    headers?: HeadersInit;
+    body?: BodyInit | null;
+    signal?: AbortSignal;
+  }
+
+  interface ResponseInit {
+    status?: number;
+    statusText?: string;
+    headers?: HeadersInit;
+  }
+
+
+  interface RewHttp {
+    serveSimple(
+      options: ServeOptions,
+      handler: Handler
+    ): ServerInstance;
+
+    withOptions(
+      options: ServeOptions
+    ): (handler: Handler) => ServerInstance;
+
+    serveHttp(conn: ConnLike): HttpConnection;
+
+    upgradeWebSocket(request: Request): {
+      response: Response;
+      socket: WebSocket;
+    };
+
+    Request: typeof Request;
+    Response: typeof Response;
+  }
+
+
+  interface RewEncoding {
+
+    toBase64(data: string | Uint8Array): string;
+    fromBase64(encoded: string, options?: { asString?: false }): Uint8Array;
+    fromBase64(encoded: string, options: { asString: true }): string;
+
+    stringToBytes(str: string): Uint8Array;
+    bytesToString(bytes: Uint8Array): string;
+
+    encodeURIComponent(str: string): string;
+    decodeURIComponent(str: string): string;
+
+    bytesToHex(bytes: Uint8Array): string;
+    hexToBytes(hex: string): Uint8Array;
+  }
+
+  interface ListenerLike extends AsyncIterable<ConnLike> {
+    accept(): Promise<ConnLike>;
+    close(): void;
+    addr: Addr;
+  }
+
+  type Addr =
+    | { transport: "tcp" | "udp"; hostname: string; port: number }
+    | { transport: "unix"; path: string };
+
+  interface NetConnectOptions {
+    hostname: string;
+    port: number;
+    transport?: "tcp" | "udp";
+  }
+
+  interface NetListenOptions {
+    hostname?: string;
+    port: number;
+    transport?: "tcp" | "udp";
+  }
+
+  interface TlsConnectOptions extends NetConnectOptions {
+    certFile?: string;
+    keyFile?: string;
+    caCerts?: string[];
+    alpnProtocols?: string[];
+    servername?: string;
+  }
+
+  interface UdpOptions {
+    port?: number;
+    hostname?: string;
+    broadcast?: boolean;
+    multicast?: boolean;
+  }
+
+  interface WebSocketStreamOptions {
+    protocols?: string[];
+    signal?: AbortSignal;
+  }
+
+  interface WebSocketStream {
+    socket: WebSocket;
+    response: Response;
+  }
+
+  interface HttpStream {
+    readable: ReadableStream<Uint8Array>;
+    writable: WritableStream<Uint8Array>;
+    response: Response;
+  }
+
+
+  interface RewNet {
+    _connect(options: NetConnectOptions): Promise<ConnLike>;
+    _listen(options: NetListenOptions): ListenerLike;
+
+    connectTls(options: TlsConnectOptions): Promise<ConnLike>;
+    createUdpSocket(options: UdpOptions): Promise<ConnLike>;
+    createUnixSocket(path: string): Promise<ConnLike>;
+    createTcpListener(options: NetListenOptions): ListenerLike;
+    createUnixListener(path: string): ListenerLike;
+    createWebSocketStream(
+      request: Request,
+      options?: WebSocketStreamOptions
+    ): Promise<WebSocketStream>;
+
+    createHttpStream(
+      request: Request
+    ): Promise<HttpStream>;
+
+    connect(
+      options: NetConnectOptions
+    ): (
+      cb: (socket: ConnLike | null, error?: Error) => void
+    ) => Promise<void>;
+
+    listen(
+      options: NetListenOptions
+    ): (
+      cb: (conn: ConnLike, listener: ListenerLike) => void
+    ) => ListenerLike;
+
+    fetch(
+      input: string | Request,
+      init?: RequestInit
+    ): Promise<Response>;
+  }
+
+  interface SystemMemoryInfo {
+    total: number;
+    free: number;
+    available: number;
+    buffers: number;
+    cached: number;
+    swapTotal: number;
+    swapFree: number;
+  }
+
+  interface NetworkInterface {
+    name: string;
+    family: "IPv4" | "IPv6";
+    address: string;
+    netmask: string;
+    scopeid?: number;
+    cidr: string;
+    mac: string;
+  }
+
+  interface UserInfo {
+    username: string | undefined;
+    uid: number;
+    gid: number;
+  }
+
+
+  interface RewOs {
+    slug: string;
+    arch: string;
+    family: string;
+    release: string;
+
+    readonly loadavg: [number, number, number];
+    readonly uptime: number;
+    readonly hostname: string;
+
+    mem(): SystemMemoryInfo;
+    networkInterfaces(): NetworkInterface[];
+
+    readonly homeDir: string | undefined;
+    readonly tempDir: string | undefined;
+
+    userInfo(): UserInfo;
+  }
+
+  interface RewPath {
+    _namespace(): 'path';
+
+    resolveFrom(base: string, relative: string): string;
+    resolve(...paths: string[]): string;
+
+    choose(...paths: string[]): string | null;
+
+    join(...segments: string[]): string;
+    normalize(path: string): string;
+    dirname(path: string): string;
+    basename(path: string): string;
+    extname(path: string): string;
+
+    isAbsolute(path: string): boolean;
+    relative(from: string, to: string): string;
+  }
+
+
+  interface RewProcess {
+    status(): Promise<RewProcessStatus>;
+    output(): Promise<Uint8Array>;
+    stderrOutput(): Promise<Uint8Array>;
+    close(): void;
+  }
+
+  interface RewProcessStatus {
+    success: boolean;
+    code: number;
+    signal?: string;
+  }
+
+  interface RewCommand {
+    outputSync(): {
+      success: boolean;
+      code: number;
+      stdout: Uint8Array;
+      stderr: Uint8Array;
+    };
+  }
+
+  interface RewShell {
+
+    ChildProcess: any; // runtime class, unknown shape
+
+    kill(pid: number, signal?: string): void;
+
+    spawn(
+      command: string | string[],
+      options?: {
+        cwd?: string;
+        env?: Record<string, string>;
+        stdin?: "piped" | "inherit" | "null";
+        stdout?: "piped" | "inherit" | "null";
+        stderr?: "piped" | "inherit" | "null";
+      }
+    ): RewProcess;
+
+    wait(process: RewProcess): Promise<RewProcessStatus>;
+
+    fexec(
+      command: string | string[],
+      options?: {
+        cwd?: string;
+        env?: Record<string, string>;
+        stdout?: "piped" | "inherit" | "null";
+        stderr?: "piped" | "inherit" | "null";
+      }
+    ): Promise<{
+      status: RewProcessStatus;
+      output: Promise<Uint8Array>;
+      error: Promise<Uint8Array>;
+    }>;
+
+    sync(
+      command: string | string[],
+      options?: {
+        cwd?: string;
+        env?: Record<string, string>;
+        stdout?: "piped" | "inherit" | "null";
+        stderr?: "piped" | "inherit" | "null";
+      }
+    ): Uint8Array;
+
+    command(
+      command: string | string[],
+      options?: {
+        args?: string[];
+        cwd?: string;
+        env?: Record<string, string>;
+        stdin?: "inherit" | "piped" | "null";
+        stdout?: "inherit" | "piped" | "null";
+        stderr?: "inherit" | "piped" | "null";
+      }
+    ): RewCommand;
+
+    exec(
+      command: string | string[],
+      options?: {
+        args?: string[];
+        cwd?: string;
+        env?: Record<string, string>;
+        stdin?: "inherit" | "piped" | "null";
+        stdout?: "inherit" | "piped" | "null";
+        stderr?: "inherit" | "piped" | "null";
+        onlyString?: boolean;
+      }
+    ): Uint8Array | string;
+  }
+
+  interface RewThread {
+    id: number;
+
+    postMessage(message: any): void;
+
+    terminate(): void;
+
+    receiveMessage(timeout?: number): any;
+
+    onmessage(fn: ((event: { data: any }) => void) | null): void;
+  }
+
+  interface RewThreads {
+    /**
+     * Spawn a new thread with provided code.
+     * Accepts a string or a function (automatically stringified).
+     */
+    spawn(code: string | (() => void)): number;
+
+    /**
+     * List all live thread IDs.
+     */
+    list(): number[];
+
+    /**
+     * Terminate one or more threads by ID.
+     */
+    terminate(...ids: number[]): void[];
+
+    /**
+     * Create and manage a thread with message passing.
+     */
+    create(code: string | (() => void)): RewThread;
+  }
+
+  interface ProcessSystem {
+    pid: number;
+    ppid: number;
+    cwd: string;
+    execPath: string;
+    args: string[];
+    onExit(cb: () => void): void;
+    exit(code?: number): never;
+  }
+
+  interface BootstrapSystem {
+    compile(...args: any[]): any;
+  }
+
+  interface VFileSystem {
+    find(path: string): any;
+    add(path: string, content: any): void;
+  }
+
+  interface IOSubsystem {
+    out: WritableStream & {
+      print: (...args: any[]) => void;
+      err: (...args: any[]) => void;
+      printf: (format: string, ...args: any[]) => void;
+    };
+    in: WritableStream & {
+      input: (...args: any[]) => string;
+    };
+    err: WritableStream;
+    _namespace(): {
+      print: (...args: any[]) => void;
+      printerr: (...args: any[]) => void;
+      printf: (format: string, ...args: any[]) => void;
+      input: (...args: any[]) => string;
+    };
+  }
+
+  interface RewObject<T> {
+    prototype: T
+  }
+}
+
+declare const module: {
+  filename: string,
+  exports: any,
+  options: Record<string, any>,
+  app: {
+    path: string,
+    config: {
+      manifest: {
+        package: string,
+        [key: string]: any
+      },
+      [key: string]: any
+    }
+  }
+};
+
+declare const rew: Rew.RewObject<{
+  ns: any,
+  ptr: Rew.RewObject<{
+    of<T>(val: T): any,
+    fn(params: any[], result: any, callback: CallableFunction): any,
+    view(ptr: any): any,
+    read(ptr: any, type: string): any
+    write(ptr: any, value: any, type: string): any,
+    deref(ptr: any, length: number): any,
+    toBytes(ptr: any, length: number): Uint8Array
+    string(ptr: any, length: number): any
+  }>;
+  mod: Rew.RewObject<{
+    define(id: string, mod: any): void;
+    get(id: string): any;
+  }>;
+  channel: Rew.RewObject<{
+    new(interval: number | (() => void), cb?: () => void): Rew.ChannelContext;
+    interval(interval: number, cb: () => void): number;
+    timeout(interval: number, cb: () => void): number;
+    timeoutClear(handle: number): void;
+    intervalClear(handle: number): void;
+  }>;
+
+  env: Rew.RewObject<Rew.EnvSystem>;
+
+  process: Rew.RewObject<Rew.ProcessSystem>;
+
+  bootstrap: Rew.RewObject<Rew.BootstrapSystem>;
+
+  vfile: Rew.RewObject<Rew.VFileSystem>;
+
+  io: Rew.RewObject<Rew.IOSubsystem>;
+
+  conf: Rew.RewObject<Rew.RewConf>;
+  encoding: Rew.RewObject<Rew.RewEncoding>;
+  ffi: Rew.RewObject<Rew.RewFFI>;
+  fs: Rew.RewObject<Rew.RewFS>;
+  http: Rew.RewObject<Rew.RewHttp>;
+  net: Rew.RewObject<Rew.RewNet>;
+  os: Rew.RewObject<Rew.RewOs>;
+  path: Rew.RewObject<Rew.RewPath>;
+  shell: Rew.RewObject<Rew.RewShell>;
+  threads: Rew.RewObject<Rew.RewThreads>;
+
+  [key: string]: any
+}>;
+
+declare function imp(filename: string): Promise<any>;
+
+declare function genUid(length?: number, seed?: string): string;
+
+declare function randFrom(min: number, max: number, seed?: string): number;
+
+declare function pickRandom<T>(...values: T[]): T;
+declare function pickRandomWithSeed<T>(seed: string | undefined, ...values: T[]): T;
+
+declare const pvt: {
+  (child: any, ...args: any[]): Rew.Private;
+  is(item: any): item is Rew.Private;
+};
+
+declare const pub: {
+  (child: any, ...args: any[]): Rew.Public;
+  is(item: any): item is Rew.Public;
+};
+
+declare function instantiate<T>(...args: any[]): T;
+
+declare function namespace(ns: object, fn?: Function): Rew.Namespace;
+
+declare const JSX: Rew.Usage;
+
+declare function using(usage: Rew.Usage | Rew.Namespace | Rew.Private | Rew.Public | string, ...args: any[]): void;
+
+
+declare function print(...args: any[]): void;
+declare function printf(format: string, ...args: any[]): void;
+declare function input(...args: any[]): string;
+
+declare const Usage: {
+  create(fn: Function): Rew.Usage;
+};
+
+declare function typedef(
+  value: any,
+  strict?: boolean
+): {
+  strict: boolean;
+  defaultValue: any;
+  class: Function;
+  type: string;
+  isConstucted: boolean;
+  isEmpty: boolean;
+};
+
+declare function typeis(obj: any, typeDef: any): boolean;
+
+declare function typex(child: any, parent: any): boolean;
+
+declare function typei(child: any, parent: any): boolean;
+
+declare function int(v: any): number;
+
+declare namespace int {
+  const type: {
+    strict: boolean;
+    defaultValue: number;
+    class: Function;
+    type: string;
+    isConstucted: boolean;
+    isEmpty: boolean;
+  };
+}
+declare function float(v: any): number;
+declare namespace float {
+  const type: {
+    strict: boolean;
+    defaultValue: number;
+    class: Function;
+    type: string;
+    isConstucted: boolean;
+    isEmpty: boolean;
+  };
+}
+declare function num(v: any): number;
+declare namespace num {
+  const type: {
+    strict: boolean;
+    defaultValue: number;
+    class: Function;
+    type: string;
+    isConstucted: boolean;
+    isEmpty: boolean;
+  };
+}
+declare function str(str: any): string;
+declare namespace str {
+  const type: {
+    strict: boolean;
+    defaultValue: string;
+    class: Function;
+    type: string;
+    isConstucted: boolean;
+    isEmpty: boolean;
+  };
+}
+declare function bool(value: any): boolean;
+declare namespace bool {
+  const type: {
+    strict: boolean;
+    defaultValue: boolean;
+    class: Function;
+    type: string;
+    isConstucted: boolean;
+    isEmpty: boolean;
+  };
+}
+
+declare function struct(template: {
+  [key: string]: any;
+}): (...args: any[]) => any;
+
+interface MatchContext<T, V>{
+  on(type: V, cb: (val: V) => T): this
+  default(cb: (val: V) => T): this
+  end: T
+}
+declare function match<T = any, V = any>(val: any): MatchContext<T, V>;
+
+declare const toBytes: (string: string) => Uint8Array;
+declare const strBytes: (bytes: Uint8Array) => string;
+`);
+}, ["app://rew.pimmy/features/project/types"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cli/main.coffee", {
+"/home/makano/workspace/pimmy/features/cli/main.coffee"(globalThis){
+with (globalThis) {
+  rew.prototype.mod.prototype.package("pimmy::cli");
+
+using(namespace(rew.prototype.ns))
+let OPTIONS = []
+
+pimmy.prototype.cli.prototype.option = function(...args) { return Usage.prototype.create(function() {
+  return OPTIONS.push(args)
+}) }
+
+pimmy.prototype.cli.prototype.parse = function(args) { return Usage.prototype.create(function(ctx) {
+  let parser = pimmy.prototype.cli.prototype.parser.prototype.new();
+  for (const option of OPTIONS) {
+    parser.option(...option)
+  }
+  return ctx.cli_options = parser.parse(args)
+}) }
+
+pimmy.prototype.cli.prototype.parser = class CliParser {
+  options
+  aliases
+  parsed
+  constructor() {
+    this.options = {}
+    this.aliases = {}
+    this.parsed = {}
+    this
+  }
+
+  new() {
+    return new CliParser()
+  }
+
+  option(name, config = {}) {
+    this.options[name] = config
+    if (config.alias != null) {
+      this.aliases[config.alias] = name
+    }
+    return this
+  }
+
+  parse(args) {
+    let i = 0
+    while (i < args.length) {
+      let arg = args[i]
+
+      if (arg.startsWith('--')) {
+        let key = arg.slice(2)
+        let name = this.aliases[key] || key
+        let config = this.options[name] || {}
+        if (config.type === 'boolean') {
+          this.parsed[name] = true
+        }
+        else {
+          let val = args[i+1]
+          if ((val == null) || val.startsWith('-')) {
+            this.parsed[name] = true
+          }
+          else {
+            this.parsed[name] = val
+            i += 1
+          }
+        }
+      }
+      else if (arg.startsWith('-')) {
+        let shortFlags = arg.slice(1)
+        for (const ch of shortFlags) {
+          let name = this.aliases[ch] || ch
+          let config = this.options[name] || {}
+          if (config.type === 'boolean') {
+            this.parsed[name] = true
+          }
+          else {
+            let val = args[i+1]
+            if ((val == null) || val.startsWith('-')) {
+              this.parsed[name] = true
+            }
+            else {
+              this.parsed[name] = val
+              i += 1
+            }
+          }
+        }
+      }
+      else {
+        if (this.parsed._ == null) {
+          this.parsed._ = []
+        }
+        this.parsed._.push(arg)
+      }
+      i += 1
+    }
+
+    return this.parsed
+  }
+}
+}
+return globalThis.module.exports;
+}          
+}, ["app://rew.pimmy/features/cli/main"]);
+(function(module){
 rew.prototype.mod.prototype.find(module, "#std.ffi!")
 rew.prototype.mod.prototype.find(module, "#std.types!");
 rew.prototype.mod.prototype.find(module, "#std.conf")
@@ -1418,928 +3500,7 @@ if(!rew.extensions.has('yaml')) rew.extensions.add('yaml', (Deno, module) => rew
     return Deno.core.ops.op_yaml_to_string(yaml);
   },
 })); 
-})({filename: "#std.yaml"});rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/loader/main.coffee", {
-"/home/makano/workspace/pimmy/features/loader/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::loader");
-
-loader.prototype.frames = ['|', '/', '-', '\\']
-loader.prototype.interval = null
-loader.prototype.i = 0
-loader.prototype.text = 'Loading'
-
-loader.prototype.start = function(text) {
-  if (text) loader.prototype.text = text
-  if (loader.prototype.interval != null) { return }  // avoid duplicate intervals
-
-  return this.interval = setInterval(() => {
-    let frame = loader.prototype.frames[loader.prototype.i % loader.prototype.frames.length]
-    printf(`\r${frame} ${loader.prototype.text}`)
-    return loader.prototype.i++
-  }
-  , 100)
-}
-
-loader.prototype.say = function(newText) {
-  return loader.prototype.text = newText
-}
-
-loader.prototype.stop = function() {
-  if (!(loader.prototype.interval != null)) { return }
-  clearInterval(loader.prototype.interval)
-  loader.prototype.interval = null
-  return printf("\r")
-}
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/loader/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/logger/main.coffee", {
-"/home/makano/workspace/pimmy/features/logger/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::logger");
-
-
-this.black     = (t) => `\x1b[30m${t}\x1b[0m`
-this.red       = (t) => `\x1b[31m${t}\x1b[0m`
-this.green     = (t) => `\x1b[32m${t}\x1b[0m`
-this.yellow    = (t) => `\x1b[33m${t}\x1b[0m`
-this.blue      = (t) => `\x1b[34m${t}\x1b[0m`
-this.magenta   = (t) => `\x1b[35m${t}\x1b[0m`
-this.cyan      = (t) => `\x1b[36m${t}\x1b[0m`
-this.white     = (t) => `\x1b[37m${t}\x1b[0m`
-this.gray      = (t) => `\x1b[90m${t}\x1b[0m`
-
-this.bgRed     = (t) => `\x1b[41m${t}\x1b[0m`
-this.bgGreen   = (t) => `\x1b[42m${t}\x1b[0m`
-this.bgYellow  = (t) => `\x1b[43m${t}\x1b[0m`
-this.bgBlue    = (t) => `\x1b[44m${t}\x1b[0m`
-this.bgMagenta = (t) => `\x1b[45m${t}\x1b[0m`
-this.bgCyan    = (t) => `\x1b[46m${t}\x1b[0m`
-this.bgWhite   = (t) => `\x1b[47m${t}\x1b[0m`
-this.bgGray    = (t) => `\x1b[100m${t}\x1b[0m`
-
-this.bold      = (t) => `\x1b[1m${t}\x1b[22m`
-this.dim       = (t) => `\x1b[2m${t}\x1b[22m`
-this.italic    = (t) => `\x1b[3m${t}\x1b[23m`
-this.underline = (t) => `\x1b[4m${t}\x1b[24m`
-this.inverse   = (t) => `\x1b[7m${t}\x1b[27m`
-this.hidden    = (t) => `\x1b[8m${t}\x1b[28m`
-this.strike    = (t) => `\x1b[9m${t}\x1b[29m`
-
-this.normal    = (t) => `\x1b[0m${t}\x1b[0m`
-
-let symbols =  {
-  info: "",
-  types: '',
-  warn: "",
-  file: "",
-  err: "",
-  suc: "",
-  question: "",
-  "package": "",
-  git: "󰊢",
-  github: "",
-  download: "",
-  build: "",
-  terminal: "",
-}
-
-let startPrefix      = '╭'
-let separator        = '│'
-let middlePrefix     = '├'
-let endPrefix        = '╰'
-
-pimmy.prototype.logger.prototype.LOG = false;
-let printnorm = function(logs) {
-  print(gray(separator))
-  return print(gray(middlePrefix) + " " + logs)
-}
-
-let parse_log = (log) => {
-  if (log.startsWith('!')) {
-    return log.slice(1, -1)
-  }
-  else if (log.startsWith(':icon')) {
-    let colors = log.split(' ')
-    colors.shift();
-    let icon = symbols[colors.shift()]
-    if (colors.length) {
-      for (const color of colors) {
-        icon = this[color.trim()](icon)
-      }
-    }
-    return icon
-  }
-  else if (log.startsWith('@')) {
-    let names = log.slice(1, -1).split('(')[0].split(',')
-    let all = log.split('(')[1].split(')')[0]
-    
-    for (const name of names) {
-      all = this[name](all)
-    }
-    return all
-  }
-  else {
-    return log
-  }
-}
-
-let resolve_logs = function(logs) {
-  return logs.map(parse_log).join(' ')
-}
-
-pimmy.prototype.logger.prototype.title = (...logs) => {
-  print()
-  return print(gray(startPrefix) + " " + resolve_logs(logs))
-}
-
-pimmy.prototype.logger.prototype.closeTitle = (...logs) => {
-  print(gray(separator))
-  return print(gray(endPrefix) + " " + resolve_logs(logs))
-}
-
-pimmy.prototype.logger.prototype.subtitle = (...logs) => {
-  return print(gray(separator) + " " + resolve_logs(logs))
-}
-
-pimmy.prototype.logger.prototype.verbose = (...logs) => {
-  if (pimmy.prototype.logger.prototype.LOG) {
-    return printnorm(bold(gray(symbols.terminal)) + " " + resolve_logs(logs))
-  };return
-}
-
-pimmy.prototype.logger.prototype.log = (...logs) => {
-  return printnorm(resolve_logs(logs))
-}
-
-pimmy.prototype.logger.prototype.info = (...logs) => {
-  return printnorm(blue(symbols.info) + ' ' + resolve_logs(logs))
-}
-
-pimmy.prototype.logger.prototype.error = (...logs) => {
-  return printnorm(bgRed(' ' + black(symbols.err + ' ERROR ')) + ' ' + red(resolve_logs(logs)))
-}
-
-pimmy.prototype.logger.prototype.warn = (...logs) => {
-  return printnorm(bgYellow(' ' + black(symbols.warn + ' WARN ')) + ' ' + yellow(resolve_logs(logs)))
-}
-
-pimmy.prototype.logger.prototype.input = (icon, ...logs) => {
-  if (!logs.length) {
-    logs = [icon]
-    icon = blue(symbols.question)
-  }
-  if (icon.startsWith(':icon')) {
-    icon = resolve_logs([icon])
-  }
-  print(gray(separator))
-  let after_prefix =  " " + icon + " " + resolve_logs(logs) + " ";
-  let result = input(gray(endPrefix) + after_prefix)
-  print("\x1b[1A\r" + gray(middlePrefix) + after_prefix)
-  return result
-}
-
-
-let loader_frames = [
-  '⠋',
-  '⠙',
-  '⠸',
-  '⠴',
-  '⠦',
-  '⠇'
-]
-let loader_interval = null
-let loader_i = 0
-let loader_text = 'Loading'
-
-let _loader_frames = () => {
-  let frame = loader_frames[loader_i % loader_frames.length]
-  printf(`\r${gray(endPrefix)} ${pickRandom(cyan, red, blue, yellow, magenta)(frame)} ${loader_text}`)
-  return loader_i++
-}
-
-let loader_start = function(text) {
-  print(gray(separator))
-  if (text) loader_text = text
-  if (loader_interval != null) { return }
-
-  return loader_interval = setInterval(_loader_frames, 100)
-}
-
-let loader_say = function(newText) {
-  return loader_text = newText
-}
-
-let loader_stop = function() {
-  if (!(loader_interval != null)) { return }
-  clearInterval(loader_interval)
-  loader_interval = null
-  return printf("\x1b[1A\r")
-}
-
-pimmy.prototype.logger.prototype.loading = loader_start 
-pimmy.prototype.logger.prototype.setLoadeg = loader_say
-pimmy.prototype.logger.prototype.stopLoading = loader_stop
-
-pimmy.prototype.logger.prototype.indent = function(x = 1) { return `\r${gray(middlePrefix+'─'.repeat(x))}` }
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/logger/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/utils/main.coffee", {
-"/home/makano/workspace/pimmy/features/utils/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::utils");
-rew.prototype.mod.prototype.find(module, "#std.fs");
-rew.prototype.mod.prototype.find(module, "#std.yaml");
-
-pimmy.prototype.utils.prototype.readYaml = function(path) {
-  return rew.prototype.yaml.prototype.parse(read(path))
-}
-
-pimmy.prototype.utils.prototype.resolveGithubURL = function(github_url) {
-  let match = github_url.match(/^github:([^\/]+)\/([^@#]+)(?:@([^#]+))?(?:#(.+))?$/)
-  if (!match) {
-    pimmy.prototype.logger.prototype.error(`Invalid GitHub URL: ${github_url}`)
-    return null
-  }
-
-  let owner, repoName, branch, commit;
-
-  [, owner, repoName, branch, commit] = match
-  branch = branch ?? "main"
-
-  let baseUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/`
-  let homeUrl = `https://github.com/${owner}/${repoName}`
-  return ({baseUrl, homeUrl, owner, repoName, branch, commit})
-}
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/utils/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/init/main.coffee", {
-"/home/makano/workspace/pimmy/features/init/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::init");
-
-rew.prototype.mod.prototype.find(module, "#std!");
-rew.prototype.mod.prototype.find(module, "#std.fs");
-rew.prototype.mod.prototype.find(module, "#std.path");
-
-pimmy.prototype.init.prototype.ROOT = rew.prototype.env.prototype.get('REW_ROOT');
-
-pimmy.prototype.init.prototype._check_init = function() {
-  try {
-    let config = rew.prototype.conf.prototype.readAuto("init.yaml")
-    return config._init
-  }
-  catch {
-    return false
-  }
-}
-
-pimmy.prototype.init.prototype._set_init = function() {
-  return rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: true })
-}
-
-pimmy.prototype.init.prototype._copy_apps = async function() {
-  let apps = rew.prototype.fs.prototype.readdir('./apps')
-  const results=[];for (const app of apps) {
-    let app_path = rew.prototype.path.prototype.normalize(app.path)
-    let dest = rew.prototype.path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app.name)
-    results.push(await rew.prototype.fs.prototype.copy(app.path, dest))
-  };return results;
-}
-
-pimmy.prototype.init.prototype.start = function() {
-  if (pimmy.prototype.init.prototype._check_init()) return
-  pimmy.prototype.init.prototype._copy_apps()
-  pimmy.prototype.init.prototype._set_init()
-  return pimmy.prototype.repo.prototype.init()
-}
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/init/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/main.coffee", {
-"/home/makano/workspace/pimmy/features/builder/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::builder");
-rew.prototype.mod.prototype.find(module, "./cargo.coffee");
-rew.prototype.mod.prototype.find(module, "./brew.coffee");
-using(namespace(pimmy.prototype.builder.prototype.cargo));
-
-pimmy.prototype.builder.prototype.build = async function(app_path_relative, safe_mode) {
-  let ref;if (path.prototype.isAbsolute(app_path_relative)) ref = app_path_relative; else ref = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(rew.prototype.process.prototype.cwd, app_path_relative));let app_path = ref
-  let app_conf_path = rew.prototype.path.prototype.join(app_path, 'app.yaml')
-
-  if (!rew.prototype.fs.prototype.exists(app_conf_path)) throw new Error('App not found');
-  
-  let config = pimmy.prototype.utils.prototype.readYaml(app_conf_path)
-  pimmy.prototype.logger.prototype.title('Building App', config.manifest.package)
-  
-  if (!(config.crates || config.build)) throw new Error('no build candidates found');
-  
-  if (config.cakes) {
-    pimmy.prototype.logger.prototype.log('Found Cakes ')
-    for (const cakefile of config.cakes) {
-      try {
-        let cake = await imp(rew.prototype.path.prototype.join(app_path, cakefile))
-        if (cake?.builders) {
-          for (const key in cake.builders) {
-            pimmy.prototype.builder.prototype[key] = cake.builders[key]
-          }
-        }
-        else {
-          pimmy.prototype.logger.prototype.warn('Cake did not export any builders')
-        }
-      }
-      catch(e) {
-        pimmy.prototype.logger.prototype.log('Failed to load cake')
-      }
-    }
-  }
-
-
-  let triggers = [];
-
-  let errors = 0
-
-  if (config.crates) {
-    if (!cargo.prototype.build_crates_for(app_path, config, safe_mode, triggers)) {
-      errors += 1
-    }
-  }
-  
-  if (config.build) {
-    for (const file of config.build) {
-      if (file.using) { 
-        let build_fn = pimmy.prototype.builder.prototype[file.using]
-        if (!build_fn) {
-          pimmy.prototype.logger.prototype.error(`Builder ${file.using} does not exist`)
-          errors++
-          break
-        }
-        let input_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.input))
-        let output_path = rew.prototype.path.prototype.normalize(rew.prototype.path.prototype.join(app_path, file.output))
-        if (!exists(input_path)) {
-          pimmy.prototype.logger.prototype.error(`Input file ${input_path} not found`)
-          errors++
-          break
-        }
-        await build_fn(app_path, config, file, input_path, output_path)
-      }
-      if (file.id) triggers.filter($ => $.id == file.id)
-        .forEach($1 => $1.build())
-      if (file.cleanup && !safe_mode) {
-        rm(path.prototype.join(app_path, file.cleanup), true)
-        pimmy.prototype.logger.prototype.info('File Cleanup')
-      }
-    }
-  }
-    
-  return pimmy.prototype.logger.prototype.closeTitle(`Finished build with ${errors} errors.`)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/builder/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/cargo.coffee", {
-"/home/makano/workspace/pimmy/features/builder/cargo.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::builder::cargo");
-
-function build_crate(crate, app_path, safe_mode) {
-  let crate_path = path.prototype.normalize(path.prototype.join(app_path, crate.path))
-  pimmy.prototype.logger.prototype.info(' Building crate', crate.name)
-  let result = shell.prototype.exec("cargo build --release", {cwd: crate_path, stdout: 'piped'})
-  if (!crate.build) return 1;
-  if (!result.success) {
-    pimmy.prototype.loader.prototype.stop()
-    pimmy.prototype.logger.prototype.error('Failed to build cargo')
-    print(rew.prototype.encoding.prototype.bytesToString(result.stderr))
-    pimmy.prototype.logger.prototype.error('Cargo build failed')
-    return 0
-  }
-  printf('\x1b[1A\r')
-  pimmy.prototype.logger.prototype.info('Built Crate ', crate.name)
-  if (crate.files) {
-    for (const file of crate.files) {
-      copy(path.prototype.join(app_path, file.input), path.prototype.join(app_path, file.output))
-      if (file.cleanup) rm(path.prototype.join(app_path, file.cleanup), true)
-    }
-  }
-
-  if (crate.cleanup && !safe_mode) {
-    pimmy.prototype.logger.prototype.info('Clean Up', crate.name)
-    rm(path.prototype.join(app_path, crate.cleanup), true)
-  }
-  return 1
-}
-
-cargo.prototype.build_crates_for = function(app_path, app_config, safe_mode, triggers) {
-  pimmy.prototype.logger.prototype.log(" Building app crates for", app_config.manifest.package);
-  
-  for (const crate of app_config.crates) {
-    if (crate.trigger) {
-      triggers.push({ id: crate.trigger, build: () => build_crate(crate, app_path, safe_mode) })
-    }
-    else if (!build_crate(crate, app_path, safe_mode)) {
-      return 0
-    }
-  }
-  return 1
-}
-
-
-
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/builder/cargo"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/builder/brew.coffee", {
-"/home/makano/workspace/pimmy/features/builder/brew.coffee"(globalThis){
-with (globalThis) {
-  
-pimmy.prototype.builder.prototype.brew = function(app_path, config, file) {
-  return shell.prototype.exec(`rew brew ${file.input} ${file.output}`, {cwd: app_path})
-}
-
-pimmy.prototype.builder.prototype.qrew = function(app_path, config, file) {
-  return shell.prototype.exec(`${path.prototype.resolve("./.artifacts/rew-qrew")} ${file.input} ${file.output}`, {cwd: app_path})
-}
-  
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/builder/brew"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cache/main.coffee", {
-"/home/makano/workspace/pimmy/features/cache/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::cache");
-
-let _cache_path = path.prototype.join(conf.prototype.path(), 'cache/app-cache')
-let _url_pattern = /^file\+([a-zA-Z0-9.]+)(?:\+sha\(([a-fA-F0-9]+)\))?\+(.+)$/;
-
-function renderProgress(downloaded, total) {
-  const percent = total ? downloaded / total : 0;
-  const barLength = 20;
-  const filled = Math.round(barLength * percent);
-  const bar = "=".repeat(filled) + "-".repeat(barLength - filled);
-  const display = total
-    ? `${(percent * 100).toFixed(1)}%`
-    : `${(downloaded / 1024).toFixed(1)} KB`;
-  printf(`\r Downloading [${bar}] ${display}`);
-}
-
-function generate_id_for_existing(app_path) {
-  let yml = pimmy.prototype.utils.prototype.readYaml(path.prototype.join(app_path, 'app.yaml'))
-  return genUid(
-    14,
-    yml.manifest.package + (yml.manifest.version || "")
-  ) + yml.manifest.package
-}
-
-function parse_url_pattern(input) {
-  let match = input.match(_url_pattern);
-  if (!match) throw new Error("Invalid input format");
-
-  let unarchiver, sha, url;
-
-  [, unarchiver, sha, url] = match;
-  return {
-    url,
-    unarchiver,
-    sha: sha || undefined,
-  }
-}
-
-let unarchivers = null
-async function unarchive(unarchiver, input, output) {
-  pimmy.prototype.logger.prototype.verbose("Preparing extractors(REW_FFI_LOAD)")
-  let symbolMap = instantiate(class {
-    zip_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    tar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    tar_gz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    tar_xz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    tar_bz2_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    tar_zst_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    rar_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-    sevenz_unarchive = rew.prototype.ffi.prototype.typed(ffi.prototype.ptr, ffi.prototype.ptr, function() { return 'i32' })
-  })
-
-  if (!unarchivers) unarchivers = ffi.prototype.open(rew.prototype.path.prototype.resolve("../../.artifacts/libarchiveman.so"), symbolMap)
-
-  return await unarchivers[unarchiver + '_unarchive'](rew.prototype.ptr.prototype.of(
-    rew.prototype.encoding.prototype.stringToBytes(input)
-  ), rew.prototype.ptr.prototype.of(
-    rew.prototype.encoding.prototype.stringToBytes(output)
-  ))
-}
-
-async function download_file(url, cache_file) {
-  let res = await net.prototype.fetch(url)
-  const total = Number(res.headers.get("content-length")) || 0
-  let downloaded = 0
-
-
-  let file = await open(cache_file, {
-    write: true,
-    create: true,
-    truncate: true,
-  })
-  
-  let reader = res.body.getReader()
-  let writer = file.writable.getWriter()
-
-  while (true) {
-    let done, value;
-    ({ done, value } = await reader.read())
-    if (done) break
-    await writer.write(value)
-    downloaded = downloaded + value.length
-    renderProgress(downloaded, total)
-  }
-  
-  printf("\r\n")
-  return file.close()
-}
-
-async function build_path(path) {
-  return await pimmy.prototype.builder.prototype.build(path)
-}
-
-pimmy.prototype.cache.prototype.install = async function(cache_path, update, silent) {
-  if (!silent) pimmy.prototype.logger.prototype.title("Installing from cache entry")
-  let app_yaml = path.prototype.join(cache_path, 'app.yaml')
-  let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
-  let app_name = config.manifest.package
-
-  if (!silent) {
-    pimmy.prototype.logger.prototype.log(":icon package", `Package Info for ${app_name}`);
-    pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "@gray(version)", `${config.manifest.version || "unknown"}`);
-    if (config.manifest.github) {
-      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon github", "github", `${config.manifest.github}`);
-    }
-    if (config.manifest.description) {
-      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), ":icon info", "description", `${config.manifest.description}`);
-    }
-    if (config.manifest.tags) {
-      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(), "tags:")
-      pimmy.prototype.logger.prototype.log(pimmy.prototype.logger.prototype.indent(2), `!${config.manifest.tags.join(' ')}!`);
-    }
-    let response = pimmy.prototype.logger.prototype.input("Proceed to install? (y/n)")
-    if (!response.toLowerCase().startsWith('y')) {
-      pimmy.prototype.logger.prototype.closeTitle("App installation cancelled")
-      return
-    }
-    pimmy.prototype.logger.prototype.log(`Installing ${app_name}`)
-  }
-  let dest = path.prototype.join(pimmy.prototype.init.prototype.ROOT, 'apps', app_name)
-
-  if (config.dependencies) {
-    if (silent) {
-      for (const dep of config.dependencies) {
-        let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
-        await pimmy.prototype.cache.prototype.install(cached, true, true, true)
-      }
-    }
-    else {
-      pimmy.prototype.logger.prototype.info("Dependencies found")
-      for (const dep of config.dependencies) {
-        pimmy.prototype.logger.prototype.info(pimmy.prototype.logger.prototype.indent(2), ` ${dep}`)
-      }
-      let response = pimmy.prototype.logger.prototype.input("Allow install dependencies? (y/n)")
-      if (response.toLowerCase().startsWith('y')) {
-        for (const dep of config.dependencies) {
-          let cached = await pimmy.prototype.cache.prototype.resolve(dep, true, true, true)
-          await pimmy.prototype.cache.prototype.install(cached, true, true)
-        }
-      }
-    }
-  }
-
-  if (update && exists(dest)) {
-    await rm(dest, true)
-  }
-  await copy(cache_path, dest)
-  if (!silent) return pimmy.prototype.logger.prototype.closeTitle("App installed");return
-}
-
-
-pimmy.prototype.cache.prototype.resolve = async function(key, update, isRecursed, silent) {
-  if (!isRecursed) pimmy.prototype.logger.prototype.title(`Resolve cache entry ${key}`)
-  let app_path = rew.prototype.path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, key))
-  if (exists(app_path)) {
-    let cache_path = path.prototype.join(_cache_path, generate_id_for_existing(app_path))
-    if (exists(cache_path)) rm(cache_path, true)
-    await copy(app_path, cache_path)
-    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
-    return cache_path
-  }
-  else if (_url_pattern.exec(key)) {
-    let url, unarchiver, sha;
-    ({
-      url,
-      unarchiver,
-      sha
-    } = parse_url_pattern(key))
-    let uid = genUid(
-      24,
-      url
-    )
-    let cache_path = path.prototype.join(_cache_path, uid)
-    if (!silent) pimmy.prototype.logger.prototype.info("Found URL entry")
-    if (!silent) pimmy.prototype.logger.prototype.verbose(`Downloading URL entry ${url} as cache entry ${uid}`)
-    
-    mkdir(cache_path, true)
-
-    let cache_file = path.prototype.join(cache_path, `entry.${unarchiver.replaceAll("_", ".")}`)
-
-    if (!update && exists(cache_file)) {
-      if (sha) {
-        if (rew.prototype.fs.prototype.sha(cache_file) != sha) {
-          await download_file(url, cache_file)
-        }
-        else {
-          if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
-        }
-      }
-      else {
-        if (!silent) pimmy.prototype.logger.prototype.verbose("Found Cache skipping Download")
-      }
-    }
-    else await download_file(url, cache_file)
-
-    let unarachive_path = path.prototype.join(cache_path, "_out")
-    let built_path = path.prototype.join(cache_path, "_out/.built")
-    if (exists(built_path)) {
-      if (!silent) pimmy.prototype.logger.prototype.closeTitle("Cache resolved")
-      return unarachive_path
-    }
-    else mkdir(unarachive_path, true)
-
-    await unarchive(unarchiver, cache_file, unarachive_path)
-    let app_yaml = path.prototype.join(unarachive_path, 'app.yaml')
-    if (!exists(app_yaml)) {
-      if (!silent) pimmy.prototype.logger.prototype.error("Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed")
-      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
-      return null
-    }
-    let config = pimmy.prototype.utils.prototype.readYaml(app_yaml)
-    if (config.install?.build) await build_path(unarachive_path)
-    if (config.install?.cleanup) {
-      for (const item of config.install.cleanup) {
-        let item_path = path.prototype.join(unarachive_path, item)
-        if (exists(item_path)) rm(item_path, true)
-      }
-    }
-    await write(built_path, '')
-    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
-    return unarachive_path
-  }
-  else if (key.startsWith('github:')) {
-    let uid = genUid(
-      24,
-      key
-    )
-    let cache_path = path.prototype.join(_cache_path, uid)
-    let homeUrl, branch, commit;
-    ({homeUrl, branch, commit} = pimmy.prototype.utils.prototype.resolveGithubURL(key))
-
-    if (!silent) pimmy.prototype.logger.prototype.info("Found GIT entry")
-    if (!silent) pimmy.prototype.logger.prototype.log(`Cloning repo ${homeUrl} as cache entry ${uid}`)
-    
-    await shell.prototype.exec('git clone ' + homeUrl + " " + cache_path, {stdout: "piped"})
-    if (branch) await shell.prototype.exec(`git checkout ${branch}`, {cwd: cache_path, stdout: "piped"})
-    if (commit) await shell.prototype.exec(`git reset --hard ${commit}`, {cwd: cache_path, stdout: "piped"})
-    if (!silent) pimmy.prototype.logger.prototype.closeTitle()
-    return cache_path
-  }
-  else {
-    let isInRepo = pimmy.prototype.repo.prototype.lookup(key)
-    if (isInRepo) {
-      return await pimmy.prototype.cache.prototype.resolve(isInRepo.url, update, true, silent)
-    }
-    else {
-      if (!silent) pimmy.prototype.logger.prototype.error(`Couldn't resolve to cache entry ${key}`)
-      if (!silent) pimmy.prototype.logger.prototype.closeTitle()
-      return null
-    }
-  }
-}
-  
-    
-
-
-
-
-
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/cache/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/repo/main.coffee", {
-"/home/makano/workspace/pimmy/features/repo/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::repo");
-
-
-rew.prototype.mod.prototype.find(module, "#std.net");
-
-// c = rew::channel::new ->
-
-async function _fetchFile(url) {
-  return await rew.prototype.net.prototype.fetch(url)
-        .then($ => $.text())
-        .catch(function() { return null })
-}
-
-repo.prototype.lookup = function(pkgname) {
-  var results, index, parts, repo_name, real_name, path, data;
-  results = []
-  index = 0 
-
-  // Parse names like "@repo/package"
-  if (pkgname.startsWith("@")) {
-    parts = pkgname.slice(1).split('/')
-    if (parts.length != 2) {
-      pimmy.prototype.logger.prototype.error(`Invalid qualified package: ${pkgname}`)
-      return null
-    };
-
-    [repo_name, real_name] = parts
-  }
-  else {
-    repo_name = null
-    real_name = pkgname
-  }
-
-  while (true) {
-    path = `cache/repo-cache/db_${index}.bin`
-    try {
-      data = JSON.parse(rew.prototype.encoding.prototype.bytesToString(rew.prototype.conf.prototype.readAuto(path)))
-    }
-    catch {
-      break
-    }
-
-    for (const pkg of data) {
-      if (repo_name && pkg.repo == repo_name && pkg.name == real_name) {
-        return pkg
-      }
-      if (!repo_name && pkg.name == real_name) {
-        results.push(pkg)
-      }
-    }
-
-    index += 1
-  }
-
-  if (results.length > 0) {
-    return results[0]
-  }  
-  else {
-    pimmy.prototype.logger.prototype.warn(`Package not found: ${pkgname}`)
-    return null
-  }
-}
-
-
-
-async function _resolveGithub(name, github_url) {
-  var baseUrl, pkg, files, app_content, app, icon_path, readme;
-  ({ baseUrl } = pimmy.prototype.utils.prototype.resolveGithubURL(github_url))
-
-  pkg = {
-    name: name,
-    url: github_url, 
-  }
-
-  files = ['app.yaml']
-
-  app_content = await _fetchFile(baseUrl + "app.yaml")
-  
-  app = rew.prototype.yaml.prototype.parse(app_content)
-  if (app?.assets?.icon) {
-    icon_path = app.assets.icon
-    pkg.icon = baseUrl + icon_path
-  }
-  if (app?.manifest?.readme) {
-    readme = await _fetchFile(baseUrl + app?.manifest?.readme)
-    pkg.readme = readme
-  }
-  if (app?.manifest?.tags) {
-    pkg.tags = app?.manifest?.tags ?? []
-  }
-  if (app?.manifest?.description) {
-    pkg.description = app.manifest.description
-  }
-
-  return pkg
-}
-
-async function _parseRepo(name, repo_url, seen = {}, result = []) {
-  var data, repo, pkg;
-  if (seen[repo_url]) return
-  seen[repo_url] = true
-
-  data = await rew.prototype.net.prototype.fetch("https:" + repo_url)
-           .then($1 => $1.text())
-           .catch(function() { return null })
-
-  if (!data) {
-    pimmy.prototype.logger.prototype.error(`Failed to fetch repo: ${repo_url}`)
-    return
-  }
-
-  repo = rew.prototype.yaml.prototype.parse(data)
-
-  // Recursively import other YAMLs
-  for (const imported of repo.imports ?? []) {
-    await _parseRepo(name, imported, seen, result)
-  }
-
-  // Resolve packages
-  let ref;for (const pkgname in ref = repo.packages) {const value = ref[pkgname];
-    if (typeof value == 'string' && value.startsWith("github:")) {
-      pkg = await _resolveGithub(pkgname, value)
-      if (pkg) pkg.repo = name
-      if (pkg) result.push(pkg)
-    }
-    else {
-      if (value.readme) value.readme = await _fetchFile(value.readme)
-      result.push({ name: pkgname, repo: name, ...value })
-    }
-  }
-
-  return result
-}
-
-repo.prototype.sync_all = async function(repo_name) {
-  var repos, index, data, path;
-  repos = conf.prototype.readYAML("repo/main.yaml")
-
-  index = 0
-  
-  pimmy.prototype.loader.prototype.start("Downloading")
-  for (const name in repos) {const url = repos[name];
-    if (typeof repo_name == "string" && name !== repo_name) continue; 
-    data = await _parseRepo(name, url)
-    if (data) {
-      path = `cache/repo-cache/db_${index}.bin`
-      rew.prototype.conf.prototype.writeAuto(path, data)
-      index += 1
-    }
-  }
-  return pimmy.prototype.loader.prototype.stop()
-}
-
-pub(repo.prototype._check_init = function() {
-  var config;
-  try {
-    config = rew.prototype.conf.prototype.readAuto("init.yaml")
-    return config
-  }
-  catch {
-    return false
-  }
-})
-
-repo.prototype.init = function() {
-  var init_file, pimmy_data_path;
-  init_file = repo.prototype._check_init()
-  if (init_file?._repo) return
-  pimmy_data_path = conf.prototype.path()
-  mkdir(path.prototype.join(pimmy_data_path, 'cache'))
-  mkdir(path.prototype.join(pimmy_data_path, 'cache/app-cache'))
-  mkdir(path.prototype.join(pimmy_data_path, 'cache/repo-cache'))
-  mkdir(path.prototype.join(pimmy_data_path, 'repo'))
-
-  conf.prototype.writeYAML('repo/main.yaml', {
-    rewpkgs: "//raw.githubusercontent.com/kevinJ045/rewpkgs/main/main.yaml"
-  })
-
-  return rew.prototype.conf.prototype.writeAuto('init.yaml', { _init: init_file._init ?? false, _repo: true })
-}
-
-
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/repo/main"]);(function(module){
+})({filename: "#std.yaml"});(function(module){
 "no-compile"
 if(!rew.extensions.has('net')) rew.extensions.add('net', (Deno, module) => rew.extensions.createClass({
   _namespace() {
@@ -2383,1096 +3544,6 @@ if(!rew.extensions.has('net')) rew.extensions.add('net', (Deno, module) => rew.e
 
   fetch: Deno.fetch.fetch,
 }));
-})({filename: "#std.net"});rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/git/main.coffee", {
-"/home/makano/workspace/pimmy/features/git/main.coffee"(globalThis){
-with (globalThis) {
-  
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/git/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/main.coffee", {
-"/home/makano/workspace/pimmy/features/project/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::project");
-const civet_options = rew.prototype.mod.prototype.find(module,  "./civet.txt");
-const main_types = rew.prototype.mod.prototype.find(module,  "./types.txt");
-
-function yesify(thing) {
-  if (thing) return "@cyan(yes)";
-  else return "@yellow(no)"
-}
-
-function isYes(input) {
-  return input.toLowerCase().startsWith('y')
-}
-
-function optionify(
-  logs,
-  cli_options,
-  key,
-) {
-  if (cli_options.ignore) {
-    return pimmy.prototype.logger.prototype.log(...logs, yesify(cli_options[key]))
-  }
-  else {
-    return cli_options[key] = isYes(pimmy.prototype.logger.prototype.input(...logs))
-  }
-}
-
-pimmy.prototype.project.prototype.new = function(cli_options) {
-  let new_path = path.prototype.normalize(path.prototype.join(rew.prototype.process.prototype.cwd, typeof cli_options.new == "string" ? cli_options.new : ""))
-  if (exists(new_path) && readdir(new_path).length) {
-    pimmy.prototype.logger.prototype.error("Cannot overwrite a populated directory")
-    return
-  }
-  
-  pimmy.prototype.logger.prototype.title(":icon package bold yellow", `Creating at ${cli_options.new === true ? "." : cli_options.new}`)
-  let app_name = path.prototype.basename(new_path)
-  pimmy.prototype.logger.prototype.log("@gray(package?)", `@bold,green(${app_name})`)
-
-  optionify(
-    [":icon git bold yellow", "@gray(git?)"],
-    cli_options,
-    "git"
-  )
-  
-  optionify(
-    [":icon types blue", "@gray(types?)"],
-    cli_options,
-    "types"
-  )
-  
-  pimmy.prototype.logger.prototype.closeTitle("Options set")
-
-  pimmy.prototype.logger.prototype.title("Creating files")
-
-  mkdir(new_path, true)
-  write(path.prototype.join(new_path, "app.yaml"), rew.prototype.yaml.prototype.string({manifest: {"package": app_name}, entries: {main: "main.coffee"}}))
-  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(app.yaml)")
-  
-  write(path.prototype.join(new_path, (cli_options.types? ("main.civet") : ("main.coffee"))), 'print "hello"')
-  pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(main.coffee)")
-
-  if (cli_options.types) {
-    mkdir(path.prototype.join(new_path, "_types"), true)
-    write(path.prototype.join(new_path, "index.d.ts"), main_types)
-    write(path.prototype.join(new_path, "civet.config.json"), civet_options)
-    pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(index.d.ts)")
-    pimmy.prototype.logger.prototype.log(":icon file blue", "Created file", "@green(civet.config.json)")
-  }
-
-  if (cli_options.git) {
-    pimmy.prototype.logger.prototype.log(":icon git bold yellow", "git init")
-    shell.prototype.exec("git init .", {cwd: new_path, stdout: "piped"})
-  }
-
-  return pimmy.prototype.logger.prototype.closeTitle("Files Created")
-}
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/project/main"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/civet.txt", function(globalThis){
-  return rew.prototype.mod.prototype.preprocess("/home/makano/workspace/pimmy/features/project/civet.txt", `{
-  "parseOptions": {
-    "coffeePrototype": true,
-    "autoLet": true,
-    "coffeeInterpolation": true,
-    "coffeeComment": true
-  }
-}`);
-}, ["app://rew.pimmy/features/project/civet"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/project/types.txt", function(globalThis){
-  return rew.prototype.mod.prototype.preprocess("/home/makano/workspace/pimmy/features/project/types.txt", `// rew-global.d.ts
-
-declare namespace Rew {
-  interface ChannelContext {
-    stop(): ChannelContext;
-    start(): ChannelContext;
-    setpoll(cb: () => void): ChannelContext;
-  }
-
-  interface Usage {
-    name: string;
-    system: (ctx: any, ...args: any[]) => void;
-    args?: any[];
-  }
-
-  interface SubPackage {
-    define(name: string, value: any): void;
-    prototype?: Record<string, any>;
-    packageName?: string;
-    name?: string;
-  }
-
-  interface Namespace {
-    name: string;
-    system: (ctx: any, ...args: any[]) => void;
-    namespace: any;
-  }
-
-  interface Private {
-    child: any;
-    args: any[];
-  }
-
-  interface Public {
-    child: any;
-    args: any[];
-  }
-
-  interface Mod {
-    name: string;
-    id?: string;
-  }
-
-  interface Ptr<T = any> {
-    id: string;
-    type?: string;
-    inner: T;
-  }
-
-  interface Ops {
-    op_dyn_imp(caller: string, path: string): Promise<[string, string]>;
-    op_gen_uid(length: number, seed?: string): string;
-    op_rand_from(min: number, max: number, seed?: string): number;
-  }
-
-  interface RewGlobal {
-    __rew_symbols(): string;
-  }
-
-  interface EnvSystem {
-    env: Record<string, string>;
-    get(key: string): string | undefined;
-    set(key: string, value: string): this;
-    delete(key: string): this;
-    has(key: string): boolean;
-    keys(): string[];
-  }
-
-  interface RewFS {
-
-    open(path: string, options?: any): any;
-
-    read(path: string, options?: { binary?: boolean }): Promise<string | Uint8Array>;
-    write(
-      path: string,
-      content: string | number[] | Uint8Array,
-      options?: { binary?: boolean; create_dirs?: boolean }
-    ): Promise<void>;
-
-    readBinary(path: string): Promise<Uint8Array>;
-    writeBinary(path: string, data: Uint8Array): Promise<void>;
-
-    stringToBytes(str: string): Uint8Array;
-    bytesToString(bytes: Uint8Array): string;
-
-    sha(path: string): string;
-
-    exists(path: string): boolean;
-
-    rm(path: string, recursive?: boolean): Promise<void>;
-    rmrf(path: string): Promise<void>;
-
-    mkdir(path: string, recursive?: boolean): Promise<void>;
-    ensureDir(path: string): Promise<void>;
-
-    stats(path: string): RewFSStats;
-
-    readdir(
-      path: string,
-      options?: {
-        include_hidden?: boolean;
-        filter_type?: 'file' | 'dir' | null;
-        sort_by?: 'name' | 'date' | null;
-      }
-    ): RewFSEntry[];
-
-    copy(
-      src: string,
-      dest: string,
-      options?: {
-        recursive?: boolean;
-        create_dirs?: boolean;
-        overwrite?: boolean;
-      }
-    ): Promise<void>;
-
-    rename(src: string, dest: string): Promise<void>;
-
-    isDirectory(path: string): boolean;
-    isFile(path: string): boolean;
-  }
-
-  interface RewFSStats {
-    isFile: boolean;
-    isDirectory: boolean;
-    isSymlink: boolean;
-    size: number;
-    modified?: number;
-    created?: number;
-    accessed?: number;
-    permissions: {
-      readonly: boolean;
-      mode?: number;
-    };
-  }
-
-  interface RewFSEntry {
-    name: string;
-    path: string;
-    isFile: boolean;
-    isDirectory: boolean;
-    isSymlink: boolean;
-  }
-
-  interface RewConf {
-    read(key: string): string;
-    write(key: string, content: string | object): Promise<void>;
-    delete(key: string): Promise<void>;
-    exists(key: string): boolean;
-
-    path(): string;
-
-    list(prefix?: string): string[];
-
-    readJSON<T = any>(key: string): T;
-    writeJSON(key: string, data: object): Promise<void>;
-
-    readYAML<T = any>(key: string): T;
-    writeYAML(key: string, data: object): Promise<void>;
-
-    readBinary(key: string): Uint8Array;
-    writeBinary(key: string, data: Uint8Array | number[]): Promise<void>;
-
-    readAuto<T = any>(key: string): T | Uint8Array | string;
-    writeAuto(key: string, data: any): Promise<void>;
-
-    getInfo(key: string): {
-      exists: boolean;
-      format: "json" | "yaml" | "binary" | "text";
-    };
-
-    current_app: {
-      config: {
-        manifest?: {
-          package?: string;
-        };
-      };
-      path: string;
-    };
-  }
-
-  type FFIPrimitiveType =
-    | "void"
-    | "pointer"
-    | "buffer"
-    | "u8"
-    | "u16"
-    | "u32"
-    | "u64"
-    | "i8"
-    | "i16"
-    | "i32"
-    | "i64"
-    | "f32"
-    | "f64";
-
-  interface FFIStruct {
-    struct: Record<string, FFIPrimitiveType>;
-  }
-
-  type FFIType = FFIPrimitiveType | FFIStruct;
-
-  interface FFITypeDef {
-    pre?: (result: any) => any;
-    parameters: FFIType[];
-    result: FFIType;
-  }
-
-  interface RewFFI {
-    _namespace(): string;
-
-    cwd(): void;
-
-    pre(...types: FFIType[]): () => FFIType[];
-
-    typed(...typesAndFn: [...FFIType[], () => FFIType | [FFIType, (result: any) => any]]): FFITypeDef | undefined;
-
-    void: "void";
-    ptr: "pointer";
-    buffer: "buffer";
-    u8: "u8";
-    u16: "u16";
-    u32: "u32";
-    u64: "u64";
-    i8: "i8";
-    i16: "i16";
-    i32: "i32";
-    i64: "i64";
-    f32: "f32";
-    f64: "f64";
-
-    struct(def: Record<string, FFIPrimitiveType>): FFIStruct;
-
-    open_raw<T = unknown>(libPath: string, symbols: Record<string, any>): T;
-
-    open<T = Record<string, (...args: any[]) => any>>(libPath: string, instance: Record<string, FFITypeDef>): T;
-
-    autoload<T = Record<string, any>>(libPath: string): T;
-  }
-
-  type ServeOptions = TcpOptions | UnixOptions;
-
-  interface TcpOptions {
-    port: number;
-    hostname?: string;
-    onListen?: (params: { port: number; hostname: string }) => void;
-    signal?: AbortSignal;
-    reusePort?: boolean;
-    reuseAddr?: boolean;
-    cert?: string;
-    key?: string;
-    alpnProtocols?: string[];
-  }
-
-  interface UnixOptions {
-    path: string;
-    onListen?: (params: { path: string }) => void;
-    signal?: AbortSignal;
-    reusePort?: boolean;
-    reuseAddr?: boolean;
-    cert?: string;
-    key?: string;
-    alpnProtocols?: string[];
-  }
-
-  interface Handler {
-    (request: Request): Response | Promise<Response>;
-  }
-
-  interface HttpConnection {
-    [key: string]: any
-  }
-
-  function serve(options: ServeOptions, handler: Handler): ServerInstance;
-  function serveHttp(conn: ConnLike): HttpConnection;
-  function upgradeWebSocket(request: Request): {
-    response: Response;
-    socket: WebSocket;
-  };
-
-  interface ConnLike {
-    readonly rid: number;
-    close(): void;
-    readable: ReadableStream<Uint8Array>;
-    writable: WritableStream<Uint8Array>;
-  }
-
-  interface ServerInstance {
-    finished: Promise<void>;
-    shutdown(): Promise<void>;
-  }
-
-  class Request {
-    constructor(input: string | URL | Request, init?: RequestInit);
-    readonly method: string;
-    readonly url: string;
-    readonly headers: Headers;
-    readonly body: ReadableStream<Uint8Array> | null;
-    clone(): Request;
-  }
-
-  // Base Response class
-  class Response {
-    constructor(body?: BodyInit | null, init?: ResponseInit);
-    static json(data: unknown, init?: ResponseInit): Response;
-  }
-
-  // Headers polyfill
-  class Headers {
-    constructor(init?: HeadersInit);
-    append(name: string, value: string): void;
-    delete(name: string): void;
-    get(name: string): string | null;
-    has(name: string): boolean;
-    set(name: string, value: string): void;
-    forEach(callback: (value: string, name: string) => void): void;
-  }
-
-  // Type aliases
-  type HeadersInit = Headers | Record<string, string> | [string, string][];
-  type BodyInit =
-    | ReadableStream<Uint8Array>
-    | ArrayBuffer
-    | Blob
-    | string
-    | FormData
-    | URLSearchParams;
-
-  interface RequestInit {
-    method?: string;
-    headers?: HeadersInit;
-    body?: BodyInit | null;
-    signal?: AbortSignal;
-  }
-
-  interface ResponseInit {
-    status?: number;
-    statusText?: string;
-    headers?: HeadersInit;
-  }
-
-
-  interface RewHttp {
-    serveSimple(
-      options: ServeOptions,
-      handler: Handler
-    ): ServerInstance;
-
-    withOptions(
-      options: ServeOptions
-    ): (handler: Handler) => ServerInstance;
-
-    serveHttp(conn: ConnLike): HttpConnection;
-
-    upgradeWebSocket(request: Request): {
-      response: Response;
-      socket: WebSocket;
-    };
-
-    Request: typeof Request;
-    Response: typeof Response;
-  }
-
-
-  interface RewEncoding {
-
-    toBase64(data: string | Uint8Array): string;
-    fromBase64(encoded: string, options?: { asString?: false }): Uint8Array;
-    fromBase64(encoded: string, options: { asString: true }): string;
-
-    stringToBytes(str: string): Uint8Array;
-    bytesToString(bytes: Uint8Array): string;
-
-    encodeURIComponent(str: string): string;
-    decodeURIComponent(str: string): string;
-
-    bytesToHex(bytes: Uint8Array): string;
-    hexToBytes(hex: string): Uint8Array;
-  }
-
-  interface ListenerLike extends AsyncIterable<ConnLike> {
-    accept(): Promise<ConnLike>;
-    close(): void;
-    addr: Addr;
-  }
-
-  type Addr =
-    | { transport: "tcp" | "udp"; hostname: string; port: number }
-    | { transport: "unix"; path: string };
-
-  interface NetConnectOptions {
-    hostname: string;
-    port: number;
-    transport?: "tcp" | "udp";
-  }
-
-  interface NetListenOptions {
-    hostname?: string;
-    port: number;
-    transport?: "tcp" | "udp";
-  }
-
-  interface TlsConnectOptions extends NetConnectOptions {
-    certFile?: string;
-    keyFile?: string;
-    caCerts?: string[];
-    alpnProtocols?: string[];
-    servername?: string;
-  }
-
-  interface UdpOptions {
-    port?: number;
-    hostname?: string;
-    broadcast?: boolean;
-    multicast?: boolean;
-  }
-
-  interface WebSocketStreamOptions {
-    protocols?: string[];
-    signal?: AbortSignal;
-  }
-
-  interface WebSocketStream {
-    socket: WebSocket;
-    response: Response;
-  }
-
-  interface HttpStream {
-    readable: ReadableStream<Uint8Array>;
-    writable: WritableStream<Uint8Array>;
-    response: Response;
-  }
-
-
-  interface RewNet {
-    _connect(options: NetConnectOptions): Promise<ConnLike>;
-    _listen(options: NetListenOptions): ListenerLike;
-
-    connectTls(options: TlsConnectOptions): Promise<ConnLike>;
-    createUdpSocket(options: UdpOptions): Promise<ConnLike>;
-    createUnixSocket(path: string): Promise<ConnLike>;
-    createTcpListener(options: NetListenOptions): ListenerLike;
-    createUnixListener(path: string): ListenerLike;
-    createWebSocketStream(
-      request: Request,
-      options?: WebSocketStreamOptions
-    ): Promise<WebSocketStream>;
-
-    createHttpStream(
-      request: Request
-    ): Promise<HttpStream>;
-
-    connect(
-      options: NetConnectOptions
-    ): (
-      cb: (socket: ConnLike | null, error?: Error) => void
-    ) => Promise<void>;
-
-    listen(
-      options: NetListenOptions
-    ): (
-      cb: (conn: ConnLike, listener: ListenerLike) => void
-    ) => ListenerLike;
-
-    fetch(
-      input: string | Request,
-      init?: RequestInit
-    ): Promise<Response>;
-  }
-
-  interface SystemMemoryInfo {
-    total: number;
-    free: number;
-    available: number;
-    buffers: number;
-    cached: number;
-    swapTotal: number;
-    swapFree: number;
-  }
-
-  interface NetworkInterface {
-    name: string;
-    family: "IPv4" | "IPv6";
-    address: string;
-    netmask: string;
-    scopeid?: number;
-    cidr: string;
-    mac: string;
-  }
-
-  interface UserInfo {
-    username: string | undefined;
-    uid: number;
-    gid: number;
-  }
-
-
-  interface RewOs {
-    slug: string;
-    arch: string;
-    family: string;
-    release: string;
-
-    readonly loadavg: [number, number, number];
-    readonly uptime: number;
-    readonly hostname: string;
-
-    mem(): SystemMemoryInfo;
-    networkInterfaces(): NetworkInterface[];
-
-    readonly homeDir: string | undefined;
-    readonly tempDir: string | undefined;
-
-    userInfo(): UserInfo;
-  }
-
-  interface RewPath {
-    _namespace(): 'path';
-
-    resolveFrom(base: string, relative: string): string;
-    resolve(...paths: string[]): string;
-
-    choose(...paths: string[]): string | null;
-
-    join(...segments: string[]): string;
-    normalize(path: string): string;
-    dirname(path: string): string;
-    basename(path: string): string;
-    extname(path: string): string;
-
-    isAbsolute(path: string): boolean;
-    relative(from: string, to: string): string;
-  }
-
-
-  interface RewProcess {
-    status(): Promise<RewProcessStatus>;
-    output(): Promise<Uint8Array>;
-    stderrOutput(): Promise<Uint8Array>;
-    close(): void;
-  }
-
-  interface RewProcessStatus {
-    success: boolean;
-    code: number;
-    signal?: string;
-  }
-
-  interface RewCommand {
-    outputSync(): {
-      success: boolean;
-      code: number;
-      stdout: Uint8Array;
-      stderr: Uint8Array;
-    };
-  }
-
-  interface RewShell {
-
-    ChildProcess: any; // runtime class, unknown shape
-
-    kill(pid: number, signal?: string): void;
-
-    spawn(
-      command: string | string[],
-      options?: {
-        cwd?: string;
-        env?: Record<string, string>;
-        stdin?: "piped" | "inherit" | "null";
-        stdout?: "piped" | "inherit" | "null";
-        stderr?: "piped" | "inherit" | "null";
-      }
-    ): RewProcess;
-
-    wait(process: RewProcess): Promise<RewProcessStatus>;
-
-    fexec(
-      command: string | string[],
-      options?: {
-        cwd?: string;
-        env?: Record<string, string>;
-        stdout?: "piped" | "inherit" | "null";
-        stderr?: "piped" | "inherit" | "null";
-      }
-    ): Promise<{
-      status: RewProcessStatus;
-      output: Promise<Uint8Array>;
-      error: Promise<Uint8Array>;
-    }>;
-
-    sync(
-      command: string | string[],
-      options?: {
-        cwd?: string;
-        env?: Record<string, string>;
-        stdout?: "piped" | "inherit" | "null";
-        stderr?: "piped" | "inherit" | "null";
-      }
-    ): Uint8Array;
-
-    command(
-      command: string | string[],
-      options?: {
-        args?: string[];
-        cwd?: string;
-        env?: Record<string, string>;
-        stdin?: "inherit" | "piped" | "null";
-        stdout?: "inherit" | "piped" | "null";
-        stderr?: "inherit" | "piped" | "null";
-      }
-    ): RewCommand;
-
-    exec(
-      command: string | string[],
-      options?: {
-        args?: string[];
-        cwd?: string;
-        env?: Record<string, string>;
-        stdin?: "inherit" | "piped" | "null";
-        stdout?: "inherit" | "piped" | "null";
-        stderr?: "inherit" | "piped" | "null";
-        onlyString?: boolean;
-      }
-    ): Uint8Array | string;
-  }
-
-  interface RewThread {
-    id: number;
-
-    postMessage(message: any): void;
-
-    terminate(): void;
-
-    receiveMessage(timeout?: number): any;
-
-    onmessage(fn: ((event: { data: any }) => void) | null): void;
-  }
-
-  interface RewThreads {
-    /**
-     * Spawn a new thread with provided code.
-     * Accepts a string or a function (automatically stringified).
-     */
-    spawn(code: string | (() => void)): number;
-
-    /**
-     * List all live thread IDs.
-     */
-    list(): number[];
-
-    /**
-     * Terminate one or more threads by ID.
-     */
-    terminate(...ids: number[]): void[];
-
-    /**
-     * Create and manage a thread with message passing.
-     */
-    create(code: string | (() => void)): RewThread;
-  }
-
-  interface ProcessSystem {
-    pid: number;
-    ppid: number;
-    cwd: string;
-    execPath: string;
-    args: string[];
-    onExit(cb: () => void): void;
-    exit(code?: number): never;
-  }
-
-  interface BootstrapSystem {
-    compile(...args: any[]): any;
-  }
-
-  interface VFileSystem {
-    find(path: string): any;
-    add(path: string, content: any): void;
-  }
-
-  interface IOSubsystem {
-    out: WritableStream & {
-      print: (...args: any[]) => void;
-      err: (...args: any[]) => void;
-      printf: (format: string, ...args: any[]) => void;
-    };
-    in: WritableStream & {
-      input: (...args: any[]) => string;
-    };
-    err: WritableStream;
-    _namespace(): {
-      print: (...args: any[]) => void;
-      printerr: (...args: any[]) => void;
-      printf: (format: string, ...args: any[]) => void;
-      input: (...args: any[]) => string;
-    };
-  }
-
-  interface RewObject<T> {
-    prototype: T
-  }
-}
-
-declare const module: {
-  filename: string,
-  exports: any,
-  options: Record<string, any>,
-  app: {
-    path: string,
-    config: {
-      manifest: {
-        package: string,
-        [key: string]: any
-      },
-      [key: string]: any
-    }
-  }
-};
-
-declare const rew: Rew.RewObject<{
-  ns: any,
-  ptr: Rew.RewObject<{
-    of<T>(val: T): any,
-    fn(params: any[], result: any, callback: CallableFunction): any,
-    view(ptr: any): any,
-    read(ptr: any, type: string): any
-    write(ptr: any, value: any, type: string): any,
-    deref(ptr: any, length: number): any,
-    toBytes(ptr: any, length: number): Uint8Array
-    string(ptr: any, length: number): any
-  }>;
-  mod: Rew.RewObject<{
-    define(id: string, mod: any): void;
-    get(id: string): any;
-  }>;
-  channel: Rew.RewObject<{
-    new(interval: number | (() => void), cb?: () => void): Rew.ChannelContext;
-    interval(interval: number, cb: () => void): number;
-    timeout(interval: number, cb: () => void): number;
-    timeoutClear(handle: number): void;
-    intervalClear(handle: number): void;
-  }>;
-
-  env: Rew.RewObject<Rew.EnvSystem>;
-
-  process: Rew.RewObject<Rew.ProcessSystem>;
-
-  bootstrap: Rew.RewObject<Rew.BootstrapSystem>;
-
-  vfile: Rew.RewObject<Rew.VFileSystem>;
-
-  io: Rew.RewObject<Rew.IOSubsystem>;
-
-  conf: Rew.RewObject<Rew.RewConf>;
-  encoding: Rew.RewObject<Rew.RewEncoding>;
-  ffi: Rew.RewObject<Rew.RewFFI>;
-  fs: Rew.RewObject<Rew.RewFS>;
-  http: Rew.RewObject<Rew.RewHttp>;
-  net: Rew.RewObject<Rew.RewNet>;
-  os: Rew.RewObject<Rew.RewOs>;
-  path: Rew.RewObject<Rew.RewPath>;
-  shell: Rew.RewObject<Rew.RewShell>;
-  threads: Rew.RewObject<Rew.RewThreads>;
-
-  [key: string]: any
-}>;
-
-declare function imp(filename: string): Promise<any>;
-
-declare function genUid(length?: number, seed?: string): string;
-
-declare function randFrom(min: number, max: number, seed?: string): number;
-
-declare function pickRandom<T>(...values: T[]): T;
-declare function pickRandomWithSeed<T>(seed: string | undefined, ...values: T[]): T;
-
-declare const pvt: {
-  (child: any, ...args: any[]): Rew.Private;
-  is(item: any): item is Rew.Private;
-};
-
-declare const pub: {
-  (child: any, ...args: any[]): Rew.Public;
-  is(item: any): item is Rew.Public;
-};
-
-declare function instantiate<T>(...args: any[]): T;
-
-declare function namespace(ns: object, fn?: Function): Rew.Namespace;
-
-declare const JSX: Rew.Usage;
-
-declare function using(usage: Rew.Usage | Rew.Namespace | Rew.Private | Rew.Public | string, ...args: any[]): void;
-
-
-declare function print(...args: any[]): void;
-declare function printf(format: string, ...args: any[]): void;
-declare function input(...args: any[]): string;
-
-declare const Usage: {
-  create(fn: Function): Rew.Usage;
-};
-
-declare function typedef(
-  value: any,
-  strict?: boolean
-): {
-  strict: boolean;
-  defaultValue: any;
-  class: Function;
-  type: string;
-  isConstucted: boolean;
-  isEmpty: boolean;
-};
-
-declare function typeis(obj: any, typeDef: any): boolean;
-
-declare function typex(child: any, parent: any): boolean;
-
-declare function typei(child: any, parent: any): boolean;
-
-declare function int(v: any): number;
-
-declare namespace int {
-  const type: {
-    strict: boolean;
-    defaultValue: number;
-    class: Function;
-    type: string;
-    isConstucted: boolean;
-    isEmpty: boolean;
-  };
-}
-declare function float(v: any): number;
-declare namespace float {
-  const type: {
-    strict: boolean;
-    defaultValue: number;
-    class: Function;
-    type: string;
-    isConstucted: boolean;
-    isEmpty: boolean;
-  };
-}
-declare function num(v: any): number;
-declare namespace num {
-  const type: {
-    strict: boolean;
-    defaultValue: number;
-    class: Function;
-    type: string;
-    isConstucted: boolean;
-    isEmpty: boolean;
-  };
-}
-declare function str(str: any): string;
-declare namespace str {
-  const type: {
-    strict: boolean;
-    defaultValue: string;
-    class: Function;
-    type: string;
-    isConstucted: boolean;
-    isEmpty: boolean;
-  };
-}
-declare function bool(value: any): boolean;
-declare namespace bool {
-  const type: {
-    strict: boolean;
-    defaultValue: boolean;
-    class: Function;
-    type: string;
-    isConstucted: boolean;
-    isEmpty: boolean;
-  };
-}
-
-declare function struct(template: {
-  [key: string]: any;
-}): (...args: any[]) => any;
-
-interface MatchContext<T, V>{
-  on(type: V, cb: (val: V) => T): this
-  default(cb: (val: V) => T): this
-  end: T
-}
-declare function match<T = any, V = any>(val: any): MatchContext<T, V>;
-
-declare const toBytes: (string: string) => Uint8Array;
-declare const strBytes: (bytes: Uint8Array) => string;
-`);
-}, ["app://rew.pimmy/features/project/types"]);rew.prototype.mod.prototype.defineNew("/home/makano/workspace/pimmy/features/cli/main.coffee", {
-"/home/makano/workspace/pimmy/features/cli/main.coffee"(globalThis){
-with (globalThis) {
-  rew.prototype.mod.prototype.package("pimmy::cli");
-
-using(namespace(rew.prototype.ns))
-let OPTIONS = []
-
-pimmy.prototype.cli.prototype.option = function(...args) { return Usage.prototype.create(function() {
-  return OPTIONS.push(args)
-}) }
-
-pimmy.prototype.cli.prototype.parse = function(args) { return Usage.prototype.create(function(ctx) {
-  let parser = pimmy.prototype.cli.prototype.parser.prototype.new();
-  for (const option of OPTIONS) {
-    parser.option(...option)
-  }
-  return ctx.cli_options = parser.parse(args)
-}) }
-
-pimmy.prototype.cli.prototype.parser = class CliParser {
-  options
-  aliases
-  parsed
-  constructor() {
-    this.options = {}
-    this.aliases = {}
-    this.parsed = {}
-    this
-  }
-
-  new() {
-    return new CliParser()
-  }
-
-  option(name, config = {}) {
-    this.options[name] = config
-    if (config.alias != null) {
-      this.aliases[config.alias] = name
-    }
-    return this
-  }
-
-  parse(args) {
-    let i = 0
-    while (i < args.length) {
-      let arg = args[i]
-
-      if (arg.startsWith('--')) {
-        let key = arg.slice(2)
-        let name = this.aliases[key] || key
-        let config = this.options[name] || {}
-        if (config.type === 'boolean') {
-          this.parsed[name] = true
-        }
-        else {
-          let val = args[i+1]
-          if ((val == null) || val.startsWith('-')) {
-            this.parsed[name] = true
-          }
-          else {
-            this.parsed[name] = val
-            i += 1
-          }
-        }
-      }
-      else if (arg.startsWith('-')) {
-        let shortFlags = arg.slice(1)
-        for (const ch of shortFlags) {
-          let name = this.aliases[ch] || ch
-          let config = this.options[name] || {}
-          if (config.type === 'boolean') {
-            this.parsed[name] = true
-          }
-          else {
-            let val = args[i+1]
-            if ((val == null) || val.startsWith('-')) {
-              this.parsed[name] = true
-            }
-            else {
-              this.parsed[name] = val
-              i += 1
-            }
-          }
-        }
-      }
-      else {
-        if (this.parsed._ == null) {
-          this.parsed._ = []
-        }
-        this.parsed._.push(arg)
-      }
-      i += 1
-    }
-
-    return this.parsed
-  }
-}
-}
-return globalThis.module.exports;
-}          
-}, ["app://rew.pimmy/features/cli/main"]);
-rew.prototype.mod.prototype.get('app://rew.pimmy/main');
+})({filename: "#std.net"});
+rew.prototype.mod.prototype.get('/home/makano/workspace/pimmy/main.coffee');
+rew.prototype.mod.prototype.get('app://rew.pimmy/pimmy');

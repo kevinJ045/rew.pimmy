@@ -3144,7 +3144,7 @@ dependencies = [
 
 [[package]]
 name = "rew_runtime"
-version = "0.0.3"
+version = "0.0.43"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3182,6 +3182,7 @@ dependencies = [
  "thiserror 2.0.12",
  "tokio",
  "uuid",
+ "winapi",
 ]
 
 [[package]]

@@ -1,6 +1,7 @@
 package pimmy::cache;
 
 _cache_path = path::join conf::path(), 'cache/app-cache'
+_repo_cache_path = path::join conf::path(), 'cache/repo-cache'
 _url_pattern = /^file\+([a-zA-Z0-9.]+)(?:\+sha\(([a-fA-F0-9]+)\))?\+(.+)$/;
 
 function renderProgress(downloaded: number, total: number) {
@@ -86,6 +87,14 @@ pimmy::cache::install = (cache_path, update, silent) ->
   config = pimmy::utils::readYaml app_yaml
   app_name = config.manifest.package
 
+  if config.install?.preinstall
+    for script of config.install.preinstall
+      try
+        await imp rew::path::join cache_path, script
+      catch(e)
+        pimmy::logger::log 'Failed to load preinstall script'
+
+
   unless silent
     pimmy::logger::log ":icon package", "Package Info for #{app_name}";
     pimmy::logger::log pimmy::logger::indent(), "@gray(version)", "#{config.manifest.version or "unknown"}";
@@ -121,7 +130,97 @@ pimmy::cache::install = (cache_path, update, silent) ->
   if update and exists dest
     await rm dest, true
   await copy cache_path, dest
+
+
+  if config.install?.bin
+    pimmy::logger::info "App has binaries to register, remember to add #{path::join pimmy::init::ROOT, 'bin'} to your PATH"
+    for bin, file in config.install?.bin
+      bin_path = path::join pimmy::init::ROOT, 'bin', bin
+      realpath = path::join dest, file
+      pimmy::logger::info "Registering #{bin}"
+      if rew::os::slug == "windows"
+        await write bin_path+".cmd", "rew run #{config.manifest.package} -e #{bin} -- %*"
+      else
+        shell::exec "ln -s #{realpath} #{bin_path}"
+
+  if config.install?.postinstall
+    for script of config.install.postinstall
+      try
+        await imp rew::path::join cache_path, script
+      catch(e)
+        pimmy::logger::log 'Failed to load postinstall script'
+
   unless silent then pimmy::logger::closeTitle "App installed"
+
+function pimmy::cache::remove_app(app_name, force)
+  app_path = path::join pimmy::init::ROOT, 'apps', app_name
+  unless exists app_path then return
+  pimmy::logger::title "Remove app"
+  pimmy::logger::info "Removing app #{app_name}"
+  response = if force then 'y' else pimmy::logger::input "Proceed? (y/n)"
+  if response.toLowerCase().startsWith 'y'
+    await rm app_path, true
+    pimmy::logger::info "Removed app #{app_name}"
+  pimmy::logger::closeTitle()
+
+
+function pimmy::cache::remove(entry, force)
+  if typeis(entry, str)
+    cacheid = entry
+    caches = readdir(_cache_path)
+    found = caches.find .name == cacheid
+    unless found
+      found = caches[cacheid]
+    unless found then return
+    response = if force then 'y' else pimmy::logger::input "Remove cache entry? (y/n)"
+    if response.toLowerCase().startsWith 'y'
+      await rm found.path, true
+  else
+    response_all = if force then 'y' else pimmy::logger::input "Remove all cache entries? (y/n)"
+    if response_all.toLowerCase().startsWith 'y'
+      await rm path::join(
+        conf::path(),
+        'cache/app-cache'
+      ), true
+      mkdir path::join conf::path(), 'cache/app-cache'
+    
+    response = if force then 'y' else pimmy::logger::input "Remove all repo cache? (y/n)"
+    if response.toLowerCase().startsWith 'y'
+      await rm path::join(
+        conf::path(),
+        'cache/repo-cache'
+      ), true
+      mkdir path::join conf::path(), 'cache/repo-cache'
+  
+
+function pimmy::cache::list_installed()
+  apps = readdir(path::join pimmy::init::ROOT, 'apps').map .name
+  pimmy::logger::title "Installed apps"
+  for item of apps
+    pimmy::logger::info pimmy::logger::indent(1), ":icon package yellow bold", "@green(#{item})"
+  pimmy::logger::closeTitle()
+  
+
+function pimmy::cache::list(cacheid)
+  pimmy::logger::title "Cache entries"
+  if cacheid
+    cachepath = cacheid.match('/') ? (cacheid+'/').split('/').slice(1, -1).join('/') : ''
+    cacheid = cacheid.match('/') ? cacheid.split('/').shift() : cacheid
+    caches = readdir(_cache_path)
+    found = caches.find .name == cacheid
+    unless found
+      found = caches[cacheid]
+    unless found then return
+    foundpath = path::join found.path, cachepath
+    dir = readdir(foundpath)
+    for item of dir
+      pimmy::logger::info pimmy::logger::indent(1), item.is_file ? ":icon file blue" : ":icon folder yellow bold", "@green(#{item.name})"
+  else
+    dir = readdir(_cache_path).map .name
+    for key, item in dir
+      pimmy::logger::info pimmy::logger::indent(1), "@yellow(#{key})", "@green(#{item})"
+  pimmy::logger::closeTitle()
+
 
 
 pimmy::cache::resolve = (key, update, isRecursed, silent) ->
@@ -131,6 +230,13 @@ pimmy::cache::resolve = (key, update, isRecursed, silent) ->
     cache_path = path::join _cache_path, generate_id_for_existing(app_path)
     if exists cache_path then rm cache_path, true
     await copy app_path, cache_path
+    app_yaml = path::join cache_path, 'app.yaml'
+    unless exists app_yaml
+      unless silent then pimmy::logger::error "Not a compatible rew app, seed file app.yaml could not be found. A bare minimum of a manifest with a package name is required for a rew app to be cached and processed"
+      unless silent then pimmy::logger::closeTitle()
+      return null
+    config = pimmy::utils::readYaml app_yaml
+    # if config.install?.build then await build_path(cache_path)
     unless silent then pimmy::logger::closeTitle()
     return cache_path
   else if _url_pattern.exec key

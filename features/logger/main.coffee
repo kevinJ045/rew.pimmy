@@ -35,6 +35,7 @@ symbols =
   types: '',
   warn: "",
   file: "",
+  folder: "",
   err: "",
   suc: "",
   question: "",
@@ -157,3 +158,7 @@ pimmy::logger::setLoadeg = loader_say
 pimmy::logger::stopLoading = loader_stop
 
 pimmy::logger::indent = (x = 1) -> "\r#{gray(middlePrefix+'─'.repeat(x))}"
+pimmy::logger::indentNatural = (x = 1) -> "#{gray('─'.repeat(x))}"
+
+pimmy::logger::start = gray(startPrefix)
+pimmy::logger::end = gray(endPrefix)

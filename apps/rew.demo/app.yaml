@@ -1,5 +1,6 @@
 manifest:
   package: rew.demo
+  version: 1.1.1
 entries:
   main: main.coffee
 crates:
