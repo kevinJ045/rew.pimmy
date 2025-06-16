@@ -162,7 +162,8 @@ function _parseRepo(name, repo_url, seen = {}, result = [])
 
   # Recursively import other YAMLs
   for imported of repo.imports ?? []
-    await _parseRepo name, imported, seen, result
+    imported_url = if imported.startsWith('./') or imported.startsWith('../') then path::resolve repo_url, imported else imported
+    await _parseRepo name, imported_url, seen, result
 
   # Resolve packages
   for pkgname, value in repo.packages

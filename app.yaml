@@ -1,6 +1,11 @@
 manifest:
   package: rew.pimmy
   version: 0.0.1
+  readme: README.md
+  description: Package manager for rew
+  tags:
+    - rew
+    - package-manager
 entries:
   main: pimmy.qrew
   pimmy: pimmy.qrew
