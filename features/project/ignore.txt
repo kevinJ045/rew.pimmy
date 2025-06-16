@@ -1,0 +1,6 @@
+
+**/target/
+**/**.qrew
+**/**.brew
+.artifacts/
+**/.artifacts/

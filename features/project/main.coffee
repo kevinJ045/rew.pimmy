@@ -1,6 +1,7 @@
 package pimmy::project;
 import civet_options from "./civet.txt";
 import main_types from "./types.txt";
+import gitignore from "./ignore.txt";
 
 function yesify(thing)
   if thing
@@ -63,5 +64,7 @@ function pimmy::project::new(cli_options)
   if cli_options.git
     pimmy::logger::log ":icon git bold yellow", "git init"
     shell::exec "git init .", cwd: new_path, stdout: "piped"
+    write path::join(new_path, ".gitignore"), gitignore
+    pimmy::logger::log ":icon file blue", "Created file", "@green(.gitignore)"
 
   pimmy::logger::closeTitle "Files Created"

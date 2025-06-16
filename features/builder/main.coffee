@@ -12,8 +12,8 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
   config = pimmy::utils::readYaml app_conf_path
   pimmy::logger::title 'Building App', config.manifest.package
   
-  unless config.crates or config.build then throw new Error('no build candidates found');
-  
+  unless config.crates or config.build or config.prefetch then throw new Error('no build candidates found');
+
   if config.cakes
     pimmy::logger::log 'Found Cakes '
     for cakefile of config.cakes
@@ -27,6 +27,28 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
       catch(e)
         pimmy::logger::log 'Failed to load cake'
 
+  if config.prefetch
+    for prefetch of config.prefetch
+      bare_url = prefetch.url
+      unarchiver = sha = null
+      unless bare_url.startsWith 'https://'
+        {
+          url,
+          unarchiver,
+          sha
+        } = pimmy::cache::parse_url_pattern bare_url
+        bare_url = url
+      output = path::join app_path, prefetch.output
+
+      if exists output
+        if sha
+          if rew::fs::sha(output) != sha
+            await pimmy::cache::download_file bare_url, output
+      else await pimmy::cache::download_file bare_url, output
+      if unarchiver and prefetch.extract
+        pimmy::cache::unarchive unarchiver, output, path::join app_path, prefetch.extract
+        if prefetch.build
+          pimmy::builder::build path::join(app_path, prefetch.extract), safe_mode
 
   triggers = [];
 

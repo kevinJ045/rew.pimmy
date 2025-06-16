@@ -13,7 +13,12 @@ crates:
         output: .artifacts/libdemo_crate.so
     cleanup: ./demo_crate
 cakes:
-  - ./_build.cake
+  - ./_build.coffee
+prefetch:
+  - url: file+zip+http://localhost:3000/rew.demo.zip
+    output: rew.demo.zip
+    extract: target
+    build: true
 build:
   - input: ./main.coffee
     id: 101
@@ -36,3 +41,4 @@ install:
   cleanup:
     - entry.zip
     - .git
+    

@@ -122,6 +122,7 @@ export function main()
     if cli_options.cache
       cli_options.app = await pimmy::cache::resolve cli_options.app
     pimmy::builder::build cli_options.app, cli_options.safe
+    return
 
   if typeof cli_options.app == 'string'
     cli_options.app = await pimmy::cache::resolve cli_options.app

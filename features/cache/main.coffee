@@ -33,6 +33,8 @@ function parse_url_pattern(input)
     sha: sha || undefined,
   }
 
+pimmy::cache::parse_url_pattern = parse_url_pattern;
+
 unarchivers = null
 function unarchive(unarchiver, input, output)
   pimmy::logger::verbose "Preparing extractors(REW_FFI_LOAD)"
@@ -53,6 +55,8 @@ function unarchive(unarchiver, input, output)
   ), rew::ptr::of(
     rew::encoding::stringToBytes output
   )
+
+pimmy::cache::unarchive = unarchive;
 
 function download_file(url, cache_file)
   res = await net::fetch url
@@ -80,6 +84,8 @@ function download_file(url, cache_file)
 
 function build_path(path)
   await pimmy::builder::build path
+
+pimmy::cache::download_file = download_file
 
 pimmy::cache::install = (cache_path, update, silent) ->
   unless silent then pimmy::logger::title "Installing from cache entry"
@@ -159,6 +165,11 @@ function pimmy::cache::remove_app(app_name, force)
   pimmy::logger::info "Removing app #{app_name}"
   response = if force then 'y' else pimmy::logger::input "Proceed? (y/n)"
   if response.toLowerCase().startsWith 'y'
+    app_yaml = path::join cache_path, 'app.yaml'
+    config = pimmy::utils::readYaml app_yaml
+    if config.install?.uninstall
+      for script in config.install?.uninstall
+        await imp rew::path::join app_path, script
     await rm app_path, true
     pimmy::logger::info "Removed app #{app_name}"
   pimmy::logger::closeTitle()
