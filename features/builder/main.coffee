@@ -38,6 +38,7 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
           sha
         } = pimmy::cache::parse_url_pattern bare_url
         bare_url = url
+        if unarchiver == '.' then unarchiver = null
       output = path::join app_path, prefetch.output
 
       if exists output
@@ -45,6 +46,13 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
           if rew::fs::sha(output) != sha
             await pimmy::cache::download_file bare_url, output
       else await pimmy::cache::download_file bare_url, output
+
+      if sha
+        file_sha = rew::fs::sha(output)
+
+        if file_sha != sha
+          throw new Error("SHA unmatched.\nExpected: #{sha}\nFound: #{file_sha}\n")
+
       if unarchiver and prefetch.extract
         pimmy::cache::unarchive unarchiver, output, path::join app_path, prefetch.extract
         if prefetch.build

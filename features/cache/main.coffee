@@ -277,6 +277,12 @@ pimmy::cache::resolve = (key, update, isRecursed, silent) ->
       else
         unless silent then pimmy::logger::verbose "Found Cache skipping Download"
     else await download_file url, cache_file
+
+    if sha
+      file_sha = rew::fs::sha(cache_file)
+
+      if file_sha != sha
+        throw new Error("SHA unmatched.\nExpected: #{sha}\nFound: #{file_sha}\n")
     
     unarachive_path = path::join cache_path, "_out"
     
