@@ -48,7 +48,7 @@ function unarchive(unarchiver, input, output)
     ffi_type(ffi::ptr, ffi::ptr) rar_unarchive       = -> 'i32'
     ffi_type(ffi::ptr, ffi::ptr) sevenz_unarchive    = -> 'i32'
 
-  unless unarchivers then unarchivers = ffi::open rew::path::resolve("../../.artifacts/libarchiveman.so"), symbolMap
+  unless unarchivers then unarchivers = ffi::open rew::path::join(module.app.path, ".artifacts/libarchiveman.so"), symbolMap
 
   await unarchivers[unarchiver + '_unarchive'] rew::ptr::of(
     rew::encoding::stringToBytes input
@@ -277,8 +277,9 @@ pimmy::cache::resolve = (key, update, isRecursed, silent) ->
       else
         unless silent then pimmy::logger::verbose "Found Cache skipping Download"
     else await download_file url, cache_file
-
+    
     unarachive_path = path::join cache_path, "_out"
+    
     built_path = path::join cache_path, "_out/.built"
     if exists built_path
       unless silent then pimmy::logger::closeTitle("Cache resolved")
