@@ -2,6 +2,7 @@ package pimmy::project;
 import civet_options from "./civet.txt";
 import main_types from "./types.txt";
 import gitignore from "./ignore.txt";
+import tsc from "./tsc.txt";
 
 function yesify(thing)
   if thing
@@ -57,8 +58,10 @@ function pimmy::project::new(cli_options)
   if cli_options.types
     mkdir path::join(new_path, "_types"), true
     write path::join(new_path, "index.d.ts"), main_types
+    write path::join(new_path, "tsconfig.json"), tsc
     write path::join(new_path, "civet.config.json"), civet_options
     pimmy::logger::log ":icon file blue", "Created file", "@green(index.d.ts)"
+    pimmy::logger::log ":icon file blue", "Created file", "@green(tsconfig.json)"
     pimmy::logger::log ":icon file blue", "Created file", "@green(civet.config.json)"
 
   if cli_options.git
