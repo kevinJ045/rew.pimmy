@@ -57,7 +57,7 @@ function pimmy::project::new(cli_options)
 
   if cli_options.types
     mkdir path::join(new_path, "_types"), true
-    write path::join(new_path, "index.d.ts"), main_types
+    write path::join(new_path, "_types/index.d.ts"), main_types
     write path::join(new_path, "tsconfig.json"), tsc
     write path::join(new_path, "civet.config.json"), civet_options
     pimmy::logger::log ":icon file blue", "Created file", "@green(index.d.ts)"

@@ -70,7 +70,7 @@ declare namespace Rew {
 
     open(path: string, options?: any): any;
 
-    read(path: string, options?: { binary?: boolean }): Promise<string | Uint8Array>;
+    read(path: string, options?: { binary?: boolean }): string | Uint8Array;
     write(
       path: string,
       content: string | number[] | Uint8Array,
