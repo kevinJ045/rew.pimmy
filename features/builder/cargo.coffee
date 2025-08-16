@@ -1,7 +1,7 @@
 package pimmy::builder::cargo;
 
 function build_crate(crate, app_path, safe_mode)
-  crate_path = path::normalize path::join app_path, crate.path
+  crate_path = path::join app_path, crate.path
   pimmy::logger::info ' Building crate', crate.name
   result = shell::exec "cargo build --release", cwd: crate_path, stdout: 'piped'
   unless crate.build then return 1;

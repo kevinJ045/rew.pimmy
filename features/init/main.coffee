@@ -19,7 +19,7 @@ pimmy::init::_set_init = ->
 pimmy::init::_copy_apps = ->
   apps = rew::fs::readdir('./apps')
   for app of apps
-    app_path = rew::path::normalize app.path
+    app_path = app.path
     dest = rew::path::join pimmy::init::ROOT, 'apps', app.name
     await rew::fs::copy app.path, dest
 

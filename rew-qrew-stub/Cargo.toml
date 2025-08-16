@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.43.0" }
-rew_runtime = { path = "/home/makano/workspace/rew-rust" }
+rew-runtime = { path = "/home/makano/workspace/rew-rust/rew-runtime" }
 anyhow = "1.0.96"

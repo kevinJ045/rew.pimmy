@@ -236,7 +236,7 @@ function pimmy::cache::list(cacheid)
 
 pimmy::cache::resolve = (key, update, isRecursed, silent) ->
   unless isRecursed then pimmy::logger::title "Resolve cache entry #{key}"
-  app_path = rew::path::normalize path::join rew::process::cwd, key
+  app_path = path::join rew::process::cwd, key
   if exists app_path
     cache_path = path::join _cache_path, generate_id_for_existing(app_path)
     if exists cache_path then rm cache_path, true

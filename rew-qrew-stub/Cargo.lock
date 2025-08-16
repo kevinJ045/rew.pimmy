@@ -60,56 +60,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
-name = "anstream"
-version = "0.6.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8acc5369981196006228e28809f761875c0327210a891e941f4c683b3a99529b"
-dependencies = [
- "anstyle",
- "anstyle-parse",
- "anstyle-query",
- "anstyle-wincon",
- "colorchoice",
- "is_terminal_polyfill",
- "utf8parse",
-]
-
-[[package]]
-name = "anstyle"
-version = "1.0.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55cc3b69f167a1ef2e161439aa98aed94e6028e5f9a59be9a6ffb47aef1651f9"
-
-[[package]]
-name = "anstyle-parse"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b2d16507662817a6a20a9ea92df6652ee4f94f914589377d69f3b21bc5798a9"
-dependencies = [
- "utf8parse",
-]
-
-[[package]]
-name = "anstyle-query"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79947af37f4177cfead1110013d678905c37501914fba0efea834c3fe9a8d60c"
-dependencies = [
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "anstyle-wincon"
-version = "3.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca3534e77181a9cc07539ad51f2141fe32f6c3ffd4df76db8ad92346b003ae4e"
-dependencies = [
- "anstyle",
- "once_cell",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -493,68 +443,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "clap"
-version = "4.5.38"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed93b9805f8ba930df42c2590f05453d5ec36cbb85d018868a5b24d31f6ac000"
-dependencies = [
- "clap_builder",
- "clap_derive",
-]
-
-[[package]]
-name = "clap_builder"
-version = "4.5.38"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "379026ff283facf611b0ea629334361c4211d1b12ee01024eec1591133b04120"
-dependencies = [
- "anstream",
- "anstyle",
- "clap_lex",
- "strsim",
-]
-
-[[package]]
-name = "clap_derive"
-version = "4.5.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09176aae279615badda0765c0c0b3f6ed53f4709118af73cf4655d85d1530cd7"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "clap_lex"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
-
-[[package]]
 name = "clipboard-win"
 version = "5.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15efe7a882b08f34e38556b14f2fb3daa98769d06c7f0c1b076dfd0d983bc892"
 dependencies = [
  "error-code",
-]
-
-[[package]]
-name = "colorchoice"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
-
-[[package]]
-name = "colored"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
-dependencies = [
- "lazy_static",
- "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2192,12 +2086,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "469fb0b9cefa57e3ef31275ee7cacb78f2fdca44e4765491884a2b119d4eb130"
 
 [[package]]
-name = "is_terminal_polyfill"
-version = "1.70.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
-
-[[package]]
 name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3134,22 +3022,49 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95325155c684b1c89f7765e30bc1c42e4a6da51ca513615660cb8a62ef9a88e3"
 
 [[package]]
-name = "rew-qrew-stub"
+name = "rew-brew"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "rew_runtime",
- "tokio",
+ "base64 0.21.7",
 ]
 
 [[package]]
-name = "rew_runtime"
-version = "0.0.43"
+name = "rew-compiler"
+version = "0.0.52"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
- "clap",
- "colored",
+ "regex",
+ "rew-jsx",
+ "serde",
+ "uuid",
+]
+
+[[package]]
+name = "rew-core"
+version = "0.0.52"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
+name = "rew-data-manager"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rew-core",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+]
+
+[[package]]
+name = "rew-extensions"
+version = "0.0.52"
+dependencies = [
+ "anyhow",
  "deno_console",
  "deno_core",
  "deno_error",
@@ -3167,22 +3082,110 @@ dependencies = [
  "deno_web",
  "deno_webidl",
  "deno_websocket",
- "futures",
- "lazy_static",
  "libc",
  "nix 0.27.1",
  "once_cell",
+ "rustyline",
+ "serde",
+ "thiserror 2.0.12",
+ "tokio",
+]
+
+[[package]]
+name = "rew-jsx"
+version = "0.0.52"
+
+[[package]]
+name = "rew-ops"
+version = "0.0.52"
+dependencies = [
+ "anyhow",
+ "base64 0.21.7",
+ "deno_core",
+ "deno_fs",
+ "deno_io",
+ "deno_permissions",
+ "futures",
+ "lazy_static",
+ "libc",
+ "once_cell",
  "rand 0.8.5",
  "regex",
+ "rew-compiler",
+ "rew-core",
+ "rew-data-manager",
+ "rew-extensions",
+ "rew-permissions",
+ "rew-vfile",
  "rustyline",
  "serde",
  "serde_json",
  "serde_yaml",
  "sha2",
- "thiserror 2.0.12",
  "tokio",
  "uuid",
- "winapi",
+]
+
+[[package]]
+name = "rew-permissions"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "deno_permissions",
+]
+
+[[package]]
+name = "rew-qrew-stub"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rew-runtime",
+ "tokio",
+]
+
+[[package]]
+name = "rew-runtime"
+version = "0.0.52"
+dependencies = [
+ "anyhow",
+ "base64 0.21.7",
+ "deno_core",
+ "deno_fs",
+ "deno_io",
+ "deno_permissions",
+ "futures",
+ "lazy_static",
+ "libc",
+ "once_cell",
+ "rand 0.8.5",
+ "regex",
+ "rew-brew",
+ "rew-compiler",
+ "rew-core",
+ "rew-data-manager",
+ "rew-extensions",
+ "rew-ops",
+ "rew-permissions",
+ "rew-utils",
+ "rew-vfile",
+ "rustyline",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "rew-utils"
+version = "0.1.0"
+
+[[package]]
+name = "rew-vfile"
+version = "0.1.0"
+dependencies = [
+ "once_cell",
 ]
 
 [[package]]
@@ -3648,12 +3651,6 @@ name = "stringcase"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72abeda133c49d7bddece6c154728f83eec8172380c80ab7096da9487e20d27c"
-
-[[package]]
-name = "strsim"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"

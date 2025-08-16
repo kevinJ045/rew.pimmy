@@ -1,5 +1,5 @@
 use std::{env, fs::File, io::{Read, Seek, SeekFrom}, path::PathBuf};
-use rew::runtime::{add_virtual_file, RewRuntime};
+use rew_runtime::{add_virtual_file, RewRuntime};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<(), anyhow::Error> {

@@ -4,7 +4,7 @@ import "./brew.coffee";
 using namespace pimmy::builder::cargo;
 
 pimmy::builder::build = (app_path_relative, safe_mode) ->
-  app_path = if path::isAbsolute app_path_relative then app_path_relative else rew::path::normalize rew::path::join rew::process::cwd, app_path_relative
+  app_path = if path::isAbsolute app_path_relative then app_path_relative else rew::path::join rew::process::cwd, app_path_relative
   app_conf_path = rew::path::join app_path, 'app.yaml'
 
   unless rew::fs::exists app_conf_path then throw new Error('App not found');
@@ -74,8 +74,8 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
           pimmy::logger::error "Builder #{file.using} does not exist"
           errors++
           break
-        input_path = rew::path::normalize rew::path::join app_path, file.input
-        output_path = rew::path::normalize rew::path::join app_path, file.output
+        input_path = rew::path::join app_path, file.input
+        output_path = rew::path::join app_path, file.output
         unless exists input_path
           pimmy::logger::error "Input file #{input_path} not found"
           errors++

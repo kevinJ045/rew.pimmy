@@ -23,7 +23,7 @@ function optionify(
     cli_options[key] = isYes pimmy::logger::input ...logs
 
 function pimmy::project::new(cli_options)
-  new_path = path::normalize path::join rew::process::cwd, typeof cli_options.new == "string" ? cli_options.new : ""
+  new_path = path::join rew::process::cwd, typeof cli_options.new == "string" ? cli_options.new : ""
   if exists(new_path) and readdir(new_path).length
     pimmy::logger::error "Cannot overwrite a populated directory"
     return
