@@ -1,3 +1,4 @@
+import "#std.os";
 
 rew::io::out.print module
 
@@ -7,3 +8,5 @@ myMap = new Map<string, number>([
 ])
 
 rew::io::out.print myMap
+
+rew::io::out.print rew::os

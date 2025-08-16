@@ -15,6 +15,7 @@ function build_crate(crate, app_path, safe_mode)
   pimmy::logger::info 'Built Crate ', crate.name
   if crate.files
     for file of crate.files
+      if file.system and (file.system isnt rew::os::slug and file.system isnt rew::os::family) then continue
       copy path::join(app_path, file.input), path::join(app_path, file.output)
       if file.cleanup then rm path::join(app_path, file.cleanup), true
 
