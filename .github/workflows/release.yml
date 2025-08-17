@@ -30,13 +30,13 @@ jobs:
           cd ../archiveman
           cargo build --release
 
-      - name: Package .exe
+      - name: Package
         run: |
           mkdir -p dist
           cp ./rew-qrew-stub/target/release/rew-qrew-stub.exe ./dist
           cp ./rew-qrew/target/release/rew-qrew.exe ./dist
           cp ./archiveman/target/release/libarchiveman.dll ./dist
-          tar -czvf dist/libs-windows.tar.gz -C dist
+          tar -czvf dist/libs-windows.tar.gz dist
 
       - uses: softprops/action-gh-release@v1
         with:
@@ -57,13 +57,13 @@ jobs:
           cd ../archiveman
           cargo build --release
 
-      - name: Package .exe
+      - name: Package
         run: |
           mkdir -p dist
           cp ./rew-qrew-stub/target/release/rew-qrew-stub ./dist
           cp ./rew-qrew/target/release/rew-qrew ./dist
           cp ./archiveman/target/release/libarchiveman.so ./dist
-          tar -czvf dist/libs-unix.tar.gz -C dist
+          tar -czvf dist/libs-unix.tar.gz dist
 
       - uses: softprops/action-gh-release@v1
         with:
@@ -126,31 +126,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
+  # build-macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Download rew
-        run: |
-          mkdir rew
-          curl -L https://github.com/kevinj045/rew/releases/latest/download/rew-darwin.dmg -o rew/rew-darwin.dmg
-          hdiutil attach rew/rew-darwin.dmg
-          cp /Volumes/rew/rew rew/rew
-          hdiutil detach /Volumes/rew
-          chmod +x rew/rew
-          echo "${{ github.workspace }}/rew" >> $GITHUB_PATH
+  #     - name: Download rew
+  #       run: |
+  #         mkdir rew
+  #         curl -L https://github.com/kevinj045/rew/releases/latest/download/rew-darwin.dmg -o rew/rew-darwin.dmg
+  #         hdiutil attach rew/rew-darwin.dmg
+  #         cp /Volumes/rew/rew rew/rew
+  #         hdiutil detach /Volumes/rew
+  #         chmod +x rew/rew
+  #         echo "${{ github.workspace }}/rew" >> $GITHUB_PATH
 
-      - name: Build
-        run: rew run main.coffee -- -Ab .
+  #     - name: Build
+  #       run: rew run main.coffee -- -Ab .
 
-      - name: Package
-        run: |
-          mkdir -p dist
-          tar -czvf dist/pimmy-darwin.tar.gz pimmy.qrew .artifacts
+  #     - name: Package
+  #       run: |
+  #         mkdir -p dist
+  #         tar -czvf dist/pimmy-darwin.tar.gz pimmy.qrew .artifacts
 
-      - uses: softprops/action-gh-release@v1
-        with:
-          files: dist/pimmy-darwin.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: softprops/action-gh-release@v1
+  #       with:
+  #         files: dist/pimmy-darwin.tar.gz
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
