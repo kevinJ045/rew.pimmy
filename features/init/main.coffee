@@ -17,7 +17,7 @@ pimmy::init::_set_init = ->
   rew::conf::writeAuto 'init.yaml', { _init: true }
 
 pimmy::init::_copy_apps = ->
-  apps = rew::fs::readdir('./apps')
+  apps = rew::fs::readdir rew::path::join(module.app.path, 'apps')
   for app of apps
     app_path = app.path
     dest = rew::path::join pimmy::init::ROOT, 'apps', app.name

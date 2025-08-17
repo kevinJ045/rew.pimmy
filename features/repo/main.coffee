@@ -278,10 +278,10 @@ function repo::init()
   init_file = repo::_check_init()
   if init_file?._repo then return
   pimmy_data_path = conf::path()
-  mkdir path::join pimmy_data_path, 'cache'
-  mkdir path::join pimmy_data_path, 'cache/app-cache'
-  mkdir path::join pimmy_data_path, 'cache/repo-cache'
-  mkdir path::join pimmy_data_path, 'repo'
+  mkdir path::join(pimmy_data_path, 'cache'), true
+  mkdir path::join(pimmy_data_path, 'cache/app-cache'), true
+  mkdir path::join(pimmy_data_path, 'cache/repo-cache'), true
+  mkdir path::join(pimmy_data_path, 'repo'), true
 
   conf::writeYAML 'repo/main.yaml', {
     rewpkgs: "//raw.githubusercontent.com/kevinJ045/rewpkgs/main/main.yaml"

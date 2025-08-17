@@ -93,10 +93,17 @@ crates:
         output: .artifacts/libarchiveman.dll
         cleanup: ./archiveman
         system: windows
+
     fallback_prefetch:
-      - url: 'file+tar+https://github.com/kevinJ045/rew/releases/download/v0.0.55/rew-linux_x86_64.tar.gz'
-        output: rew-linux_x86_64.tar.gz
-        extract: .artifact
+      - url: 'file+tar+https://github.com/kevinJ045/rew/releases/download/latest/libs-windows.tar.gz'
+        output: libs-windows.tar.gz
+        extract: .artifacts
+        system: windows
+
+      - url: 'file+tar+https://github.com/kevinJ045/rew/releases/download/latest/libs-unix.tar.gz'
+        output: libs-unix.tar.gz
+        extract: .artifacts
+        system: unix
     
   - name: rew_qrew_stub
     path: ./rew-qrew-stub

@@ -9,7 +9,7 @@ on:
       version:
         description: 'Version to publish'
         required: true
-        default: '0.0.1'
+        default: '0.0.12'
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
           cargo build --release
           cd ../rew-qrew
           cargo build --release
-          cd archiveman
+          cd ../archiveman
           cargo build --release
 
       - name: Package .exe
@@ -54,7 +54,7 @@ jobs:
           cargo build --release
           cd ../rew-qrew
           cargo build --release
-          cd archiveman
+          cd ../archiveman
           cargo build --release
 
       - name: Package .exe
