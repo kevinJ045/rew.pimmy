@@ -1,0 +1,156 @@
+name: Cross-Platform Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
+        default: '0.0.1'
+
+permissions:
+  contents: write
+
+jobs:
+
+
+  build-libs-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          cd rew-qrew-stub
+          cargo build --release
+          cd ../rew-qrew
+          cargo build --release
+          cd archiveman
+          cargo build --release
+
+      - name: Package .exe
+        run: |
+          mkdir -p dist
+          cp ./rew-qrew-stub/target/release/rew-qrew-stub.exe ./dist
+          cp ./rew-qrew/target/release/rew-qrew.exe ./dist
+          cp ./archiveman/target/release/libarchiveman.dll ./dist
+          tar -czvf dist/libs-windows.tar.gz -C dist
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/libs-windows.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-libs-unix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          cd rew-qrew-stub
+          cargo build --release
+          cd ../rew-qrew
+          cargo build --release
+          cd archiveman
+          cargo build --release
+
+      - name: Package .exe
+        run: |
+          mkdir -p dist
+          cp ./rew-qrew-stub/target/release/rew-qrew-stub ./dist
+          cp ./rew-qrew/target/release/rew-qrew ./dist
+          cp ./archiveman/target/release/libarchiveman.so ./dist
+          tar -czvf dist/libs-unix.tar.gz -C dist
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/libs-unix.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download rew
+        run: |
+          mkdir rew
+          curl -L https://github.com/kevinj045/rew/releases/latest/download/rew.exe -o rew/rew.exe
+          echo "${{ github.workspace }}\\rew" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build
+        run: rew run main.coffee -- -Ab .
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar -czvf dist/pimmy-windows-x86_64.tar.gz pimmy.qrew .artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/pimmy-windows-x86_64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install GNU target
+        run: rustup target add x86_64-unknown-linux-gnu
+
+      - name: Download rew
+        run: |
+          mkdir rew
+          curl -L https://github.com/kevinj045/rew/releases/latest/download/rew-linux_x86_64.tar.gz -o rew/rew-linux_x86_64.tar.gz
+          tar -xzf rew/rew-linux_x86_64.tar.gz -C rew
+          echo "${{ github.workspace }}/rew" >> $GITHUB_PATH
+
+      - name: Build
+        run: rew run main.coffee -- -Ab .
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar -czvf dist/pimmy-linux-x86_64.tar.gz pimmy.qrew .artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/pimmy-linux.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download rew
+        run: |
+          mkdir rew
+          curl -L https://github.com/kevinj045/rew/releases/latest/download/rew-darwin.dmg -o rew/rew-darwin.dmg
+          hdiutil attach rew/rew-darwin.dmg
+          cp /Volumes/rew/rew rew/rew
+          hdiutil detach /Volumes/rew
+          chmod +x rew/rew
+          echo "${{ github.workspace }}/rew" >> $GITHUB_PATH
+
+      - name: Build
+        run: rew run main.coffee -- -Ab .
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar -czvf dist/pimmy-darwin.tar.gz pimmy.qrew .artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/pimmy-darwin.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

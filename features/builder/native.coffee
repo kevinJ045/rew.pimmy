@@ -22,7 +22,7 @@ function installer(mgr, pkg)
   rew::shell::exec command_str, stdout: 'inherit', stdin: 'inherit'
 
 function is_available_mgr(mgr)
-  !!strBytes(rew::shell::exec("which #{mgr}", stdout: "piped").stdout).trim()
+  !!strBytes(rew::shell::exec("#{rew::os::clamp("where", "which")} #{mgr}", stdout: "piped").stdout).trim()
 
 pimmy::builder::native::is_available_mgr = is_available_mgr
 

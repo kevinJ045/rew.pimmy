@@ -2757,7 +2757,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -3023,7 +3023,9 @@ checksum = "95325155c684b1c89f7765e30bc1c42e4a6da51ca513615660cb8a62ef9a88e3"
 
 [[package]]
 name = "rew-brew"
-version = "0.1.0"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61e37639d53ea8a5d750b977bb2f41456bf0cc85087a14502c5b13af95c045ca"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3031,7 +3033,9 @@ dependencies = [
 
 [[package]]
 name = "rew-compiler"
-version = "0.0.52"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37ea3e969313dff26e81d49560ca718d2ff66d40afd341a8ff55bff04c3f5843"
 dependencies = [
  "anyhow",
  "regex",
@@ -3042,7 +3046,9 @@ dependencies = [
 
 [[package]]
 name = "rew-core"
-version = "0.0.52"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26484d50ca4d282abee71cfc659e0ebe49f7131cb65913388b220d10953e7414"
 dependencies = [
  "anyhow",
  "serde",
@@ -3051,7 +3057,9 @@ dependencies = [
 
 [[package]]
 name = "rew-data-manager"
-version = "0.1.0"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9efa288d2f3ff525476a56e4e602c90393152bbdc34501adc4b49981966b0b5"
 dependencies = [
  "anyhow",
  "rew-core",
@@ -3062,7 +3070,9 @@ dependencies = [
 
 [[package]]
 name = "rew-extensions"
-version = "0.0.52"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62107e49039c3770353a071e3bda7347964bd277b258c16365c0ca4993fdd3c0"
 dependencies = [
  "anyhow",
  "deno_console",
@@ -3093,11 +3103,15 @@ dependencies = [
 
 [[package]]
 name = "rew-jsx"
-version = "0.0.52"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0adb2019ea17e8b0359d3d33f7f6a9bf119e5f8c0422327093aea7825dce0aab"
 
 [[package]]
 name = "rew-ops"
-version = "0.0.52"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc055e32e76649327c44afbcbfe2c9f0233889f97fea83d751ac83ffd04af9e5"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3128,7 +3142,9 @@ dependencies = [
 
 [[package]]
 name = "rew-permissions"
-version = "0.1.0"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "034e768861403ee0b34a5241d360742dade5f71c51da4f811165d84a1e649026"
 dependencies = [
  "anyhow",
  "deno_permissions",
@@ -3139,13 +3155,30 @@ name = "rew-qrew-stub"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "rew-runtime",
+ "rew_runtime",
  "tokio",
 ]
 
 [[package]]
-name = "rew-runtime"
-version = "0.0.52"
+name = "rew-utils"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abb61f2088c8fe36b5f7c42ac1b3b36d16ce44bc993d45275a8ffdc982502cae"
+
+[[package]]
+name = "rew-vfile"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f587bac84833951e78ff375a2fb3566c7d620b2335b689a4280f03650d40bb52"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
+name = "rew_runtime"
+version = "0.0.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "455312f842f61472743454cb1512238d0239977691f02057183499158cc30461"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3175,17 +3208,6 @@ dependencies = [
  "sha2",
  "tokio",
  "uuid",
-]
-
-[[package]]
-name = "rew-utils"
-version = "0.1.0"
-
-[[package]]
-name = "rew-vfile"
-version = "0.1.0"
-dependencies = [
- "once_cell",
 ]
 
 [[package]]

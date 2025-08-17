@@ -9,7 +9,7 @@ manifest:
 entries:
   main: pimmy.qrew
   pimmy: pimmy.qrew
-native:
+native_test:
   # When to install native libraries
   on: build
 
@@ -78,6 +78,20 @@ native:
         Start-Process msiexec.exe -ArgumentList '/i node.msi /quiet /norestart' -Wait
 
 crates:
+  - name: archiveman
+    path: ./archiveman
+    build: true
+    files:
+      - input: ./archiveman/target/release/libarchiveman.so
+        output: .artifacts/libarchiveman.so
+        cleanup: ./archiveman
+        system: unix
+
+      - input: ./archiveman/target/release/libarchiveman.dll
+        output: .artifacts/libarchiveman.dll
+        cleanup: ./archiveman
+        system: windows
+    
   - name: rew_qrew_stub
     path: ./rew-qrew-stub
     build: true
@@ -87,8 +101,14 @@ crates:
     files:
       - input: ./rew-qrew/target/release/rew-qrew
         output: .artifacts/rew-qrew
-        cleanup: ./rew-qrew/target
-    cleanup: ./rew-qrew-stub/target
+        system: unix
+        cleanup: ./rew-qrew
+
+      - input: ./rew-qrew/target/release/rew-qrew.exe
+        output: .artifacts/rew-qrew.exe
+        system: windows
+        cleanup: ./rew-qrew
+    cleanup: ./rew-qrew-stub
 build:
   - input: ./main.coffee
     output: main.brew

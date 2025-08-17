@@ -1,7 +1,11 @@
 use std::{env, fs, io::{Write, Seek, SeekFrom}, path::PathBuf};
 
 fn create_bound(input_brew: &str, output_qrew: &str) -> anyhow::Result<()> {
+    #[cfg(unix)]
     let stub_bin = include_bytes!("../../rew-qrew-stub/target/release/rew-qrew-stub"); // Or use Path
+    #[cfg(windows)]
+    let stub_bin = include_bytes!("../../rew-qrew-stub/target/release/rew-qrew-stub.exe"); // Or use Path
+    
     let script = fs::read(input_brew)?;
     let script_len = script.len() as u64;
 

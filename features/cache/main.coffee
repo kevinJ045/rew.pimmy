@@ -48,7 +48,7 @@ function unarchive(unarchiver, input, output)
     ffi_type(ffi::ptr, ffi::ptr) rar_unarchive       = -> 'i32'
     ffi_type(ffi::ptr, ffi::ptr) sevenz_unarchive    = -> 'i32'
 
-  unless unarchivers then unarchivers = ffi::open rew::path::join(module.app.path, ".artifacts/libarchiveman.so"), symbolMap
+  unless unarchivers then unarchivers = ffi::open rew::path::join(module.app.path, rew::os::clamp(".artifacts/libarchiveman.dll", ".artifacts/libarchiveman.so")), symbolMap
 
   await unarchivers[unarchiver + '_unarchive'] rew::ptr::of(
     rew::encoding::stringToBytes input
