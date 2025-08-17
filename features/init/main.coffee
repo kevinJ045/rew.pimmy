@@ -25,6 +25,9 @@ pimmy::init::_copy_apps = ->
 
 pimmy::init::start = ->
   if pimmy::init::_check_init() then return
-  pimmy::init::_copy_apps()
-  pimmy::init::_set_init()
-  pimmy::repo::init()
+  try
+    pimmy::init::_copy_apps()
+    pimmy::init::_set_init()
+    pimmy::repo::init()
+  catch e
+    print e

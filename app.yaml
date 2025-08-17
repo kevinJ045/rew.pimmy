@@ -1,6 +1,6 @@
 manifest:
   package: rew.pimmy
-  version: 0.0.12
+  version: 0.0.14
   readme: README.md
   description: Package manager for rew
   tags:
