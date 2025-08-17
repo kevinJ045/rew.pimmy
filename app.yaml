@@ -9,7 +9,7 @@ manifest:
 entries:
   main: pimmy.qrew
   pimmy: pimmy.qrew
-native:
+native_test:
   # When to install native libraries
   on: build
 
