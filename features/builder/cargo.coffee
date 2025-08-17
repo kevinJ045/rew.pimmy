@@ -17,7 +17,7 @@ function build_crate(crate, app_path, safe_mode)
     for file of crate.files
       if file.system and (file.system !== rew::os::slug and file.system !== rew::os::family) then continue
       copy path::join(app_path, file.input), path::join(app_path, file.output)
-      if file.cleanup then rm path::join(app_path, file.cleanup), true
+      if file.cleanup and !safe_mode then rm path::join(app_path, file.cleanup), true
 
   if crate.cleanup and !safe_mode
     pimmy::logger::info 'Clean Up', crate.name

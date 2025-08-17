@@ -47,7 +47,17 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
       catch(e)
         pimmy::logger::log 'Failed to load cake'
 
-  if config.prefetch
+  if config.crates and !pimmy::builder::native::is_available_mgr('cargo')
+    unless config.prefetch then config.prefetch = []
+    for crate of config.crates
+      if crate.fallback_prefetch then config.prefetch.push ...crate.fallback_prefetch
+      if crate.files?
+        for file of crate.files
+          if file.fallback_prefetch?
+            config.prefetch.push file.fallback_prefetch
+
+
+  if config.prefetch?
     for prefetch of config.prefetch
       if prefetch.system and (prefetch.system !== rew::os::slug and prefetch.system !== rew::os::family) then continue
       bare_url = prefetch.url
@@ -83,11 +93,11 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
 
   errors = 0
 
-  if config.crates
+  if config.crates?
     unless cargo::build_crates_for app_path, config, safe_mode, triggers
       errors += 1
   
-  if config.build
+  if config.build?
     for file of config.build
       if file.using 
         build_fn = pimmy::builder::[file.using]

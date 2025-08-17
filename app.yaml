@@ -1,6 +1,6 @@
 manifest:
   package: rew.pimmy
-  version: 0.0.1
+  version: 0.0.12
   readme: README.md
   description: Package manager for rew
   tags:
@@ -93,6 +93,10 @@ crates:
         output: .artifacts/libarchiveman.dll
         cleanup: ./archiveman
         system: windows
+    fallback_prefetch:
+      - url: 'file+tar+https://github.com/kevinJ045/rew/releases/download/v0.0.55/rew-linux_x86_64.tar.gz'
+        output: rew-linux_x86_64.tar.gz
+        extract: .artifact
     
   - name: rew_qrew_stub
     path: ./rew-qrew-stub
