@@ -1,7 +1,22 @@
 package pimmy::builder;
 import "./cargo.coffee";
 import "./brew.coffee";
+import "./native.coffee";
 using namespace pimmy::builder::cargo;
+
+pimmy::builder::native_deps = (app_path_relative, safe_mode) ->
+  app_path = if path::isAbsolute app_path_relative then app_path_relative else rew::path::join rew::process::cwd, app_path_relative
+  app_conf_path = rew::path::join app_path, 'app.yaml'
+
+  unless rew::fs::exists app_conf_path then throw new Error('App not found');
+  
+  config = pimmy::utils::readYaml app_conf_path
+
+  pimmy::logger::title "Installing native dependencies"
+
+  await builder::native::install_deps config, app_path, safe_mode
+
+  pimmy::logger::closeTitle()
 
 pimmy::builder::build = (app_path_relative, safe_mode) ->
   app_path = if path::isAbsolute app_path_relative then app_path_relative else rew::path::join rew::process::cwd, app_path_relative
@@ -13,6 +28,10 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
   pimmy::logger::title 'Building App', config.manifest.package
   
   unless config.crates or config.build or config.prefetch then throw new Error('no build candidates found');
+
+  if config.native and config.native.on is 'build'
+    pimmy::logger::log 'Installing native dependencies'
+    await builder::native::install_deps config, app_path, safe_mode
 
   if config.cakes
     pimmy::logger::log 'Found Cakes '
@@ -29,6 +48,7 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
 
   if config.prefetch
     for prefetch of config.prefetch
+      if prefetch.system and (prefetch.system isnt rew::os::slug and prefetch.system isnt rew::os::family) then continue
       bare_url = prefetch.url
       unarchiver = sha = null
       unless bare_url.startsWith 'https://'

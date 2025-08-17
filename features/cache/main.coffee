@@ -57,6 +57,7 @@ function unarchive(unarchiver, input, output)
   )
 
 pimmy::cache::unarchive = unarchive;
+pimmy::cache::path = _cache_path;
 
 function download_file(url, cache_file)
   res = await net::fetch url
@@ -132,6 +133,14 @@ pimmy::cache::install = (cache_path, update, silent) ->
         for dep of config.dependencies
           cached = await pimmy::cache::resolve dep, true, true, true
           await pimmy::cache::install cached, true, true
+
+  if config.native and config.native.on is 'install'
+    if silent
+      await pimmy::builder::native_deps cache_path
+    else
+      response = pimmy::logger::input "Allow install native dependencies? (y/n)"
+      if response.toLowerCase().startsWith 'y'
+        await pimmy::builder::native_deps cache_path
 
   if update and exists dest
     await rm dest, true

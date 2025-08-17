@@ -9,6 +9,74 @@ manifest:
 entries:
   main: pimmy.qrew
   pimmy: pimmy.qrew
+native:
+  # When to install native libraries
+  on: build
+
+  # Linux: Use preset package managers/bases
+  # BONUS: Add custom command
+  linux:
+    - name: nodejs
+      type: package
+      version: ">=20.0.0"
+      managers:
+        apt: nodejs
+        dnf: nodejs
+        pacman: nodejs
+        zypper: nodejs20  # (openSUSE example)
+        nix: node
+
+      fallback:
+        type: script
+        path: _native_install.coffee
+
+      preinstall:
+        - shell: echo Preparing to install Node.js...
+      postinstall:
+        - shell: node --version
+
+
+
+    - name: openssl
+      type: package
+      version: ">=1.1"
+      managers:
+        apt: libssl-dev
+        dnf: openssl-devel
+        pacman: openssl
+      fallback:
+        - type: shell
+          content: |
+            curl -fsSL https://deb.nodesource.com/setup_20.x | echo
+
+  # MACOS: Under planning
+  macos:
+    - name: nodejs
+      type: package
+      manager: brew
+      package: nodejs
+
+  # Windows: Use installers or managers like choco or winget
+  windows:
+    - name: nodejs
+      type: package
+      managers:
+        winget: OpenJS.NodeJS.LTS
+        chocolatey: nodejs-lts
+      fallback:
+        type: installer
+        url: https://nodejs.org/dist/latest/node-v20.x.x-x64.msi
+
+    - name: vcredist
+      type: installer
+      url: https://aka.ms/vs/17/release/vc_redist.x64.exei
+
+    - name: custom
+      type: shell
+      content: |
+        irm https://nodejs.org/dist/latest/node-v20.x.x-x64.msi -OutFile node.msi
+        Start-Process msiexec.exe -ArgumentList '/i node.msi /quiet /norestart' -Wait
+
 crates:
   - name: rew_qrew_stub
     path: ./rew-qrew-stub
