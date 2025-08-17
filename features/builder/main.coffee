@@ -30,8 +30,9 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
   unless config.crates or config.build or config.prefetch then throw new Error('no build candidates found');
 
   if config.native and config.native.on is 'build'
-    pimmy::logger::log 'Installing native dependencies'
-    await builder::native::install_deps config, app_path, safe_mode
+    pimmy::logger::log pimmy::logger::indent(4), 'Installing native dependencies'
+    await builder::native::install_deps config, app_path, safe_mode, 4
+    pimmy::logger::log pimmy::logger::indent(4), 'Dependencies installed'
 
   if config.cakes
     pimmy::logger::log 'Found Cakes '
@@ -48,7 +49,7 @@ pimmy::builder::build = (app_path_relative, safe_mode) ->
 
   if config.prefetch
     for prefetch of config.prefetch
-      if prefetch.system and (prefetch.system isnt rew::os::slug and prefetch.system isnt rew::os::family) then continue
+      if prefetch.system and (prefetch.system !== rew::os::slug and prefetch.system !== rew::os::family) then continue
       bare_url = prefetch.url
       unarchiver = sha = null
       unless bare_url.startsWith 'https://'

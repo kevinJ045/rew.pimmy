@@ -9,7 +9,7 @@ manifest:
 entries:
   main: pimmy.qrew
   pimmy: pimmy.qrew
-native_test:
+native:
   # When to install native libraries
   on: build
 
@@ -19,6 +19,7 @@ native_test:
     - name: nodejs
       type: package
       version: ">=20.0.0"
+      check: node --version
       managers:
         apt: nodejs
         dnf: nodejs
@@ -40,6 +41,7 @@ native_test:
     - name: openssl
       type: package
       version: ">=1.1"
+      check: jsjshd
       managers:
         apt: libssl-dev
         dnf: openssl-devel
@@ -47,7 +49,7 @@ native_test:
       fallback:
         - type: shell
           content: |
-            curl -fsSL https://deb.nodesource.com/setup_20.x | echo
+            echo
 
   # MACOS: Under planning
   macos:
