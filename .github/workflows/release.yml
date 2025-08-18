@@ -31,19 +31,9 @@ jobs:
           cargo build --release
           cd ..
 
-      - name: Package
-        run: |
-          mkdir -p dist
-          dir ./
-          dir ./rew-qrew-stub/target/release/
-          cp ./rew-qrew-stub/target/release/rew-qrew-stub.exe ./dist
-          cp ./rew-qrew/target/release/rew-qrew.exe ./dist
-          cp ./archiveman/target/release/libarchiveman.dll ./dist
-          tar -czvf dist/libs-windows.tar.gz dist
-
       - uses: softprops/action-gh-release@v1
         with:
-          files: dist/libs-windows.tar.gz
+          files: rew-qrew/target/release/rew-qrew.exe , archiveman/target/release/libarchiveman.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,17 +50,9 @@ jobs:
           cd ../archiveman
           cargo build --release
 
-      - name: Package
-        run: |
-          mkdir -p dist
-          cp ./rew-qrew-stub/target/release/rew-qrew-stub ./dist
-          cp ./rew-qrew/target/release/rew-qrew ./dist
-          cp ./archiveman/target/release/libarchiveman.so ./dist
-          tar -czvf dist/libs-unix.tar.gz dist
-
       - uses: softprops/action-gh-release@v1
         with:
-          files: dist/libs-unix.tar.gz
+          files: rew-qrew/target/release/rew-qrew , archiveman/target/release/libarchiveman.so
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
