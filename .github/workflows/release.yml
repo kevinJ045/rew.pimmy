@@ -74,11 +74,11 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar -czvf dist/pimmy-windows-x86_64.tar.gz apps app.yaml pimmy.qrew .artifacts
+          tar -czvf dist/pimmy-windows.tar.gz apps app.yaml pimmy.qrew .artifacts
 
       - uses: softprops/action-gh-release@v1
         with:
-          files: dist/pimmy-windows-x86_64.tar.gz
+          files: dist/pimmy-windows.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -103,7 +103,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar -czvf dist/pimmy-linux-x86_64.tar.gz apps app.yaml pimmy.qrew .artifacts
+          tar -czvf dist/pimmy-linux.tar.gz apps app.yaml pimmy.qrew .artifacts
 
       - uses: softprops/action-gh-release@v1
         with:
