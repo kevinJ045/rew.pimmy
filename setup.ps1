@@ -33,7 +33,7 @@ Write-Host "Running: rew brew main.coffee pimmy.qrew"
 rew brew main.coffee pimmy.qrew
 
 Write-Host "Cleaning up..."
-$keep = @("apps", ".artifacts", "pimmy.qrew")
+$keep = @("apps", ".artifacts", "app.yaml", "pimmy.qrew")
 
 Get-ChildItem -Force | ForEach-Object {
     if ($keep -notcontains $_.Name) {
