@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.43.0" }
-rew_runtime = { version = "0.0.55" }
+rew_runtime = { version = "0.0.56" }
 anyhow = "1.0.96"
