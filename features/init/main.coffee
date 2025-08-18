@@ -20,8 +20,7 @@ pimmy::init::_copy_apps = ->
   apps_path = rew::path::join(module.app.path, 'apps')
   unless exists apps_path
     return
-  # Temporary fix for windows
-  if rew::os::slug == 'windows'
+  unless exists rew::path::join pimmy::init::ROOT, 'apps'
     return
   try
     apps = rew::fs::readdir apps_path

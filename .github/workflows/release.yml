@@ -33,7 +33,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v1
         with:
-          files: rew-qrew/target/release/rew-qrew.exe , archiveman/target/release/libarchiveman.dll
+          files: rew-qrew/target/release/rew-qrew.exe , archiveman/target/release/archiveman.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

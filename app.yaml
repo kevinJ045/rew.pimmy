@@ -89,7 +89,7 @@ crates:
         cleanup: ./archiveman
         system: unix
 
-      - input: ./archiveman/target/release/libarchiveman.dll
+      - input: ./archiveman/target/release/archiveman.dll
         output: .artifacts/libarchiveman.dll
         cleanup: ./archiveman
         system: windows

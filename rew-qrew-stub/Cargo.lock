@@ -3023,9 +3023,9 @@ checksum = "95325155c684b1c89f7765e30bc1c42e4a6da51ca513615660cb8a62ef9a88e3"
 
 [[package]]
 name = "rew-brew"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61e37639d53ea8a5d750b977bb2f41456bf0cc85087a14502c5b13af95c045ca"
+checksum = "6bcaf18ef96dcfdf2d6c0de2aa8ddd1228fc3c599240f60896bb25950c986291"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3033,9 +3033,9 @@ dependencies = [
 
 [[package]]
 name = "rew-compiler"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37ea3e969313dff26e81d49560ca718d2ff66d40afd341a8ff55bff04c3f5843"
+checksum = "a739c29d5574910751d6359d571b3d9b074249a9a5b7706deebe726664564fef"
 dependencies = [
  "anyhow",
  "regex",
@@ -3046,9 +3046,9 @@ dependencies = [
 
 [[package]]
 name = "rew-core"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26484d50ca4d282abee71cfc659e0ebe49f7131cb65913388b220d10953e7414"
+checksum = "5eb9aa222e0bdc20ed80dba6b34ee5edbdc2aa849a979bde8f4723b57f71f502"
 dependencies = [
  "anyhow",
  "serde",
@@ -3057,9 +3057,9 @@ dependencies = [
 
 [[package]]
 name = "rew-data-manager"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9efa288d2f3ff525476a56e4e602c90393152bbdc34501adc4b49981966b0b5"
+checksum = "c66e75d508203bfd9e6c4d78dc23c068d89e05c15c37d8815c22716fe9758de6"
 dependencies = [
  "anyhow",
  "rew-core",
@@ -3070,9 +3070,9 @@ dependencies = [
 
 [[package]]
 name = "rew-extensions"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62107e49039c3770353a071e3bda7347964bd277b258c16365c0ca4993fdd3c0"
+checksum = "92cdf82b33c45c55cf3d61436f1f8627b5f49b78c42d0ca63ce3696e9a1fb3a7"
 dependencies = [
  "anyhow",
  "deno_console",
@@ -3099,19 +3099,20 @@ dependencies = [
  "serde",
  "thiserror 2.0.12",
  "tokio",
+ "winapi",
 ]
 
 [[package]]
 name = "rew-jsx"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0adb2019ea17e8b0359d3d33f7f6a9bf119e5f8c0422327093aea7825dce0aab"
+checksum = "541d5f07fe35aa3488212502d3bc69e0145cd9ff09638a83605eb0c1ebb91aa8"
 
 [[package]]
 name = "rew-ops"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc055e32e76649327c44afbcbfe2c9f0233889f97fea83d751ac83ffd04af9e5"
+checksum = "15e1357c95757c5473d636db0ac9a2098434bf53e026517b695e7fa212d503cf"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -3138,13 +3139,14 @@ dependencies = [
  "sha2",
  "tokio",
  "uuid",
+ "winapi",
 ]
 
 [[package]]
 name = "rew-permissions"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "034e768861403ee0b34a5241d360742dade5f71c51da4f811165d84a1e649026"
+checksum = "8435c2c9cc5d6fce91af4b4be13345b07835710b4d676c32408147d40d8eadc8"
 dependencies = [
  "anyhow",
  "deno_permissions",
@@ -3161,24 +3163,24 @@ dependencies = [
 
 [[package]]
 name = "rew-utils"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abb61f2088c8fe36b5f7c42ac1b3b36d16ce44bc993d45275a8ffdc982502cae"
+checksum = "0658612d19dba8b2d86c17c96738f95fce6ceff29f8db04c8ff6d36317754ffd"
 
 [[package]]
 name = "rew-vfile"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f587bac84833951e78ff375a2fb3566c7d620b2335b689a4280f03650d40bb52"
+checksum = "95f4397c298e252153b7693141dfcfbea105489394b185f8ff698dbeefe629c1"
 dependencies = [
  "once_cell",
 ]
 
 [[package]]
 name = "rew_runtime"
-version = "0.0.55"
+version = "0.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "455312f842f61472743454cb1512238d0239977691f02057183499158cc30461"
+checksum = "8dc045b03777c97f38e497d8ce699f9f3fbf6313fe9b16e972cdd29bdfd77eca"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
