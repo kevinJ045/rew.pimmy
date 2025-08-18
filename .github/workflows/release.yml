@@ -29,10 +29,13 @@ jobs:
           cargo build --release
           cd ../archiveman
           cargo build --release
+          cd ..
 
       - name: Package
         run: |
           mkdir -p dist
+          dir ./
+          dir ./rew-qrew-stub/target/release/
           cp ./rew-qrew-stub/target/release/rew-qrew-stub.exe ./dist
           cp ./rew-qrew/target/release/rew-qrew.exe ./dist
           cp ./archiveman/target/release/libarchiveman.dll ./dist
@@ -89,7 +92,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar -czvf dist/pimmy-windows-x86_64.tar.gz pimmy.qrew .artifacts
+          tar -czvf dist/pimmy-windows-x86_64.tar.gz apps app.yaml pimmy.qrew .artifacts
 
       - uses: softprops/action-gh-release@v1
         with:
@@ -118,7 +121,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar -czvf dist/pimmy-linux-x86_64.tar.gz pimmy.qrew .artifacts
+          tar -czvf dist/pimmy-linux-x86_64.tar.gz apps app.yaml pimmy.qrew .artifacts
 
       - uses: softprops/action-gh-release@v1
         with:
